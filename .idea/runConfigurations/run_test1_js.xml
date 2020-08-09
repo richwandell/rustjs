@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="run test1.js" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="channel" value="DEFAULT" />
+    <option name="channel" value="NIGHTLY" />
     <option name="command" value="run --package language --bin language -- -f js/test1.js" />
     <option name="allFeatures" value="false" />
     <option name="emulateTerminal" value="false" />

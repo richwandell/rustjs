@@ -1,4 +1,4 @@
-use crate::JsToken;
+use crate::js_token::JsToken;
 
 pub struct Scope {
     tokens: Vec<Box<dyn JsToken>>

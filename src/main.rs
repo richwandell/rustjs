@@ -1,18 +1,14 @@
-mod scope;
-mod keywords;
-mod constants;
-
-use keywords::{let_keyword};
 use std::{env, fs};
 use std::str::Chars;
-use std::thread::yield_now;
-use crate::keywords::let_keyword::LetStruct;
 use crate::scope::Scope;
 
-trait JsToken {
-    fn set_name(&mut self, name: String);
-    fn print_name(&self);
-}
+mod js_token;
+mod scope;
+mod tokens;
+mod constants;
+
+use crate::tokens::find_token::find_token;
+use javascript_lexer::Lexer;
 
 fn find_name(it: &mut Chars, word: String) -> String {
     let mut name = String::from("");
@@ -43,21 +39,21 @@ fn find_name(it: &mut Chars, word: String) -> String {
     name
 }
 
-fn find_token(it: &mut Chars) -> Box<dyn JsToken> {
-
-    let mut word = String::from("");
+fn parse_file(file: String) {
+    let mut scope = Scope::new();
+    let mut it = file.chars();
 
     loop {
-        let mut cho = it.next();
-        if cho != None {
-            let mut ch = cho.unwrap();
-            word.push(ch);
+        let token = find_token(&mut it);
 
-            if constants::KEYWORDS.contains(&&*word) {
-                if word == constants::STRLET {
-                    let name = find_name(it, word);
-                    return Box::new(LetStruct{name});
-                }
+        match token {
+            Ok(token) => {
+                scope.add_token(token);
+                scope.test();
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                break
             }
         }
     }
@@ -72,12 +68,16 @@ fn main() {
 
         match file {
             Ok(file) => {
-                let mut scope = Scope::new();
-                let mut it = file.chars();
-                let token = find_token(&mut it);
-
-                scope.add_token(token);
-                scope.test();
+                // parse_file(file);
+                let tokens = Lexer::lex_tokens(&file);
+                match tokens {
+                    Ok(tokens) => {
+                        for token in tokens {
+                            println!("{:?}", token);
+                        }
+                    }
+                    _ => {}
+                }
             }
             Err(e) => println!("{:?}", e)
         }
