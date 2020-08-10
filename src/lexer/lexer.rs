@@ -1,8 +1,14 @@
 use crate::js_token::Tok;
 use std::any::Any;
+use crate::lexer::find_token::find_token;
+
+pub enum LexError {
+    Error { text: String },
+    End
+}
 
 pub struct Lexer {
-    tokens: Vec<Tok>
+    pub(crate) tokens: Vec<Tok>
 }
 
 impl Lexer {
@@ -11,6 +17,35 @@ impl Lexer {
         Lexer {
             tokens: Vec::new()
         }
+    }
+
+    pub fn lex(&mut self, file: String) -> &Vec<Tok> {
+        let mut it = file.chars();
+
+        loop {
+            let token = find_token(&mut it);
+
+            match token {
+                Ok(tokens) => {
+                    for token in tokens {
+                        self.add_token(token);
+                    }
+                }
+                Err(e) => {
+                    match e {
+                        LexError::Error { text } => {
+                            self.test();
+                            println!("{:?}", text);
+                        },
+                        LexError::End => {
+                            return &self.tokens;
+                        }
+                    }
+                    break
+                }
+            }
+        }
+        return &self.tokens;
     }
 
     pub(crate) fn add_token(&mut self, token: Tok) {

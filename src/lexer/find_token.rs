@@ -1,11 +1,10 @@
 use std::str::Chars;
 use crate::js_token::{Tok};
 use std::error::Error;
-use crate::{constants};
 use std::convert::TryFrom;
-use crate::constants::ParseError;
+use crate::lexer::lexer::LexError;
 
-fn find_float(it: &mut Chars, ch: char) -> Result<Vec<Tok>, ParseError> {
+fn find_float(it: &mut Chars, ch: char) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     word.push(ch);
 
@@ -26,12 +25,12 @@ fn find_float(it: &mut Chars, ch: char) -> Result<Vec<Tok>, ParseError> {
     }
     let f = word.parse::<f64>();
     if f.is_err() {
-        return Err(ParseError::Error{text: String::from("Invalid Float Value")})
+        return Err(LexError::Error{text: String::from("Invalid Float Value")})
     }
     return Ok(vec![Tok::Float {value: f.unwrap()}])
 }
 
-fn find_string_double_quote(it: &mut Chars) -> Result<Vec<Tok>, ParseError> {
+fn find_string_double_quote(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     loop {
         let cho = it.next();
@@ -48,7 +47,7 @@ fn find_string_double_quote(it: &mut Chars) -> Result<Vec<Tok>, ParseError> {
     return Ok(vec![Tok::String {value: word}])
 }
 
-fn find_equal(it: &mut Chars) -> Result<Vec<Tok>, ParseError> {
+fn find_equal(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("=");
     loop {
         let cho = it.next();
@@ -77,10 +76,10 @@ fn find_equal(it: &mut Chars) -> Result<Vec<Tok>, ParseError> {
     if word == "=>" {
         return Ok(vec![Tok::RdoubleArrow])
     }
-    return Err(ParseError::Error{text: String::from("Equals Error")})
+    return Err(LexError::Error{text: String::from("Equals Error")})
 }
 
-fn find_let(it: &mut Chars) -> Result<Vec<Tok>, ParseError> {
+fn find_let(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     loop {
         let cho = it.next();
@@ -99,7 +98,7 @@ fn find_let(it: &mut Chars) -> Result<Vec<Tok>, ParseError> {
     return Ok(vec![Tok::Let, Tok::Name {name: word}])
 }
 
-pub fn find_token(it: &mut Chars) -> Result<Vec<Tok>, ParseError> {
+pub fn find_token(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
 
     let mut word = String::from("");
 
@@ -126,7 +125,7 @@ pub fn find_token(it: &mut Chars) -> Result<Vec<Tok>, ParseError> {
                 return Ok(vec![Tok::Lpar]);
             }
 
-            if ch != ' ' && ch != '\n' {
+            if ch != ' ' && ch != '\n' && ch != '\r' {
                 word.push(ch);
             }
 
@@ -159,7 +158,7 @@ pub fn find_token(it: &mut Chars) -> Result<Vec<Tok>, ParseError> {
             }
 
         } else {
-            return Err(ParseError::Error{text: String::from("Unknown Parse Error")});
+            return Err(LexError::End);
         }
     }
 }
