@@ -98,6 +98,25 @@ fn find_let(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
     return Ok(vec![Tok::Let, Tok::Name {name: word}])
 }
 
+fn find_const(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
+    let mut word = String::from("");
+    loop {
+        let cho = it.next();
+        if cho != None {
+            let ch = cho.unwrap();
+            if ch != ' ' {
+                word.push(ch);
+            }
+
+            if word.len() > 0 && ch == ' ' {
+                break
+            }
+        }
+    }
+    word = word.trim().parse().unwrap();
+    return Ok(vec![Tok::Const, Tok::Name {name: word}])
+}
+
 pub fn find_token(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
 
     let mut word = String::from("");
@@ -114,6 +133,9 @@ pub fn find_token(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
             if ch == ' ' && word.len() > 0 {
                 if word == "let" {
                     return find_let(it);
+                }
+                if word == "const" {
+                    return find_const(it);
                 }
                 return Ok(vec![Tok::Name {name: word}])
             }
