@@ -1,63 +1,72 @@
 use std::str::Chars;
-use crate::js_token::{Tok};
 use std::error::Error;
 use std::convert::TryFrom;
 use crate::lexer::lexer::LexError;
+use crate::lexer::string_iterator::StringIterator;
+use crate::lexer::js_token::Tok;
 
-fn find_float(it: &mut Chars, ch: char) -> Result<Vec<Tok>, LexError> {
+fn find_float(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     word.push(ch);
 
-    let end_chars = vec![' ', ';'];
-
     loop {
-        let cho = it.next();
-        if cho != None {
-            let ch = cho.unwrap();
+        let ch = it.next();
+        match ch {
+            Ok(ch) => {
+                if !ch.is_numeric() && ch != '.' {
+                    it.prev();
+                    break;
+                }
 
-
-            if word.len() > 0 && end_chars.contains(&ch) {
+                word.push(ch);
+            }
+            Err(e) => {
                 break
             }
-
-            word.push(ch);
         }
     }
     let f = word.parse::<f64>();
     if f.is_err() {
-        return Err(LexError::Error{text: String::from("Invalid Float Value")})
+        return Err(LexError::Error { text: String::from("Invalid Float Value") });
     }
-    return Ok(vec![Tok::Float {value: f.unwrap()}])
+    return Ok(vec![Tok::Float { value: f.unwrap() }]);
 }
 
-fn find_string_double_quote(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
+fn find_string_double_quote(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     loop {
-        let cho = it.next();
-        if cho != None {
-            let ch = cho.unwrap();
+        let ch = it.next();
+        match ch {
+            Ok(ch) => {
+                if word.len() > 0 && ch == '"' {
+                    break;
+                }
 
-            if word.len() > 0 && ch == '"' {
-                break
-            }
-
-            word.push(ch);
-        }
-    }
-    return Ok(vec![Tok::String {value: word}])
-}
-
-fn find_equal(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
-    let mut word = String::from("=");
-    loop {
-        let cho = it.next();
-        if cho != None {
-            let ch = cho.unwrap();
-            if ch != ' ' {
                 word.push(ch);
             }
+            Err(e) => {
+                break
+            }
+        }
+    }
+    return Ok(vec![Tok::String { value: word }]);
+}
 
-            if word.len() > 0 && ch == ' ' {
+fn find_equal(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
+    let mut word = String::from("=");
+
+    loop {
+        let ch = it.next();
+        match ch {
+            Ok(ch) => {
+                if ch != '=' && ch != '>' {
+                    it.prev();
+                    break
+                }
+
+                word.push(ch);
+            }
+            Err(e) => {
                 break
             }
         }
@@ -74,113 +83,138 @@ fn find_equal(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
         return Ok(vec![Tok::EqEqEual]);
     }
     if word == "=>" {
-        return Ok(vec![Tok::RdoubleArrow])
+        return Ok(vec![Tok::RdoubleArrow]);
     }
-    return Err(LexError::Error{text: String::from("Equals Error")})
+    return Err(LexError::Error { text: String::from("Equals Error") });
 }
 
-fn find_let(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
+fn find_let(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     loop {
-        let cho = it.next();
-        if cho != None {
-            let ch = cho.unwrap();
-            if ch != ' ' {
-                word.push(ch);
-            }
+        let ch = it.next();
+        match ch {
+            Ok(ch) => {
+                if ch != ' ' {
+                    word.push(ch);
+                }
 
-            if word.len() > 0 && ch == ' ' {
+                if word.len() > 0 && ch == ' ' {
+                    break;
+                }
+            }
+            Err(e) => {
                 break
             }
         }
     }
     word = word.trim().parse().unwrap();
-    return Ok(vec![Tok::Let, Tok::Name {name: word}])
+    return Ok(vec![Tok::Let, Tok::Name { name: word }]);
 }
 
-fn find_const(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
+fn find_const(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     loop {
-        let cho = it.next();
-        if cho != None {
-            let ch = cho.unwrap();
-            if ch != ' ' {
-                word.push(ch);
-            }
+        let ch = it.next();
+        match ch {
+            Ok(ch) => {
+                if ch != ' ' {
+                    word.push(ch);
+                }
 
-            if word.len() > 0 && ch == ' ' {
+                if word.len() > 0 && ch == ' ' {
+                    break;
+                }
+            }
+            Err(e) => {
                 break
             }
         }
     }
     word = word.trim().parse().unwrap();
-    return Ok(vec![Tok::Const, Tok::Name {name: word}])
+    return Ok(vec![Tok::Const, Tok::Name { name: word }]);
 }
 
-pub fn find_token(it: &mut Chars) -> Result<Vec<Tok>, LexError> {
-
+pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
 
     loop {
-        let cho = it.next();
-        if cho != None {
-            let ch = cho.unwrap();
-
-            if ch == '.' && word.len() > 0 {
-                return Ok(vec![Tok::Name {name: word}, Tok::Dot]);
-            }
-
-            if ch == ' ' && word.len() > 0 {
-                if word == "let" {
-                    return find_let(it);
+        let ch = it.next();
+        match ch {
+            Ok(ch) => {
+                if ch == '.' && word.len() > 0 {
+                    return Ok(vec![Tok::Name { name: word }, Tok::Dot]);
                 }
-                if word == "const" {
-                    return find_const(it);
+
+                if ch == ' ' && word.len() > 0 {
+                    if word == "let" {
+                        return find_let(it);
+                    }
+                    if word == "const" {
+                        return find_const(it);
+                    }
+                    if word == "return" {
+                        return Ok(vec![Tok::Return]);
+                    }
+                    return Ok(vec![Tok::Name { name: word }]);
                 }
-                return Ok(vec![Tok::Name {name: word}])
-            }
 
-            if ch == '(' {
-                if word.len() > 0 {
-                    return Ok(vec![Tok::Name {name: word}, Tok::Lpar])
+                if ch == '(' {
+                    if word.len() > 0 {
+                        if word == "function" {
+                            return Ok(vec![Tok::Function, Tok::Lpar]);
+                        }
+                        return Ok(vec![Tok::Name { name: word }, Tok::Lpar]);
+                    }
+                    return Ok(vec![Tok::Lpar]);
                 }
-                return Ok(vec![Tok::Lpar]);
-            }
 
-            if ch != ' ' && ch != '\n' && ch != '\r' {
-                word.push(ch);
-            }
+                if ch == '=' {
+                    return find_equal(it);
+                }
 
-            if ch == '=' {
-                return find_equal(it);
-            }
+                if ch == '"' {
+                    return find_string_double_quote(it);
+                }
 
-            if ch == '"' {
-                return find_string_double_quote(it);
-            }
+                if ch == ';' {
+                    return Ok(vec![Tok::Semi]);
+                }
 
-            if ch == ';' {
-                return Ok(vec![Tok::Semi]);
-            }
+                if ch == ')' {
+                    return Ok(vec![Tok::Rpar]);
+                }
 
-            if ch == ')' {
-                return Ok(vec![Tok::Rpar]);
-            }
+                if ch == '{' {
+                    return Ok(vec![Tok::Lbrace]);
+                }
 
-            if ch == '{' {
-                return Ok(vec![Tok::Lbrace]);
-            }
+                if ch == '}' {
+                    return Ok(vec![Tok::Rbrace]);
+                }
 
-            if ch == '}' {
-                return Ok(vec![Tok::Rbrace]);
-            }
+                if ch == '+' {
+                    return Ok(vec![Tok::Plus]);
+                }
 
-            if ch.is_numeric() {
-                return find_float(it, ch);
-            }
+                if ch == '-' {
+                    return Ok(vec![Tok::Minus]);
+                }
 
-        } else {
-            return Err(LexError::End);
+                if ch == '*' {
+                    return Ok(vec![Tok::Star]);
+                }
+
+                if ch.is_numeric() {
+                    return find_float(it, ch);
+                }
+
+                if ch != ' ' && ch != '\n' && ch != '\r' {
+                    word.push(ch);
+                }
+            }
+            Err(e) => {
+                return Err(LexError::End);
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
-use crate::js_token::Tok;
 use std::any::Any;
 use crate::lexer::find_token::find_token;
+use crate::lexer::string_iterator::StringIterator;
+use crate::lexer::js_token::Tok;
 
 pub enum LexError {
     Error { text: String },
@@ -20,7 +21,7 @@ impl Lexer {
     }
 
     pub fn lex(&mut self, file: String) -> &Vec<Tok> {
-        let mut it = file.chars();
+        let mut it = StringIterator::new(file.chars());
 
         loop {
             let token = find_token(&mut it);

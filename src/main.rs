@@ -6,11 +6,12 @@ use std::str::Chars;
 use crate::lexer::find_token::find_token;
 use crate::lexer::lexer::Lexer;
 
-mod js_token;
-
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+
+    let f = "1.".parse::<f64>();
+    println!("{:?}", f);
 
     if args[1] == "-f" {
         let file = fs::read_to_string(&args[2]);
