@@ -84,6 +84,10 @@ pub enum Tok {
     GreaterEqual, // >=
     LeftShift, // <<
     RightShift, // >>
+    LeftShiftEqual, // <<=
+    RightShiftEqual, // >>=
+    RightShiftUnsigned, // >>>
+    RightShiftUnsignedEqual, // >>>=
     PlusEqual, // +=
     MinusEqual, // -=
     StarEqual, // *=

@@ -144,6 +144,10 @@ impl Lexer {
                 Tok::StarEqual => println!("{}", "StarEqual"),
                 Tok::RsingleArrow => println!("{}", "RsingleArrow"),
                 Tok::RdoubleArrow => println!("{}", "RdoubleArrow"),
+                Tok::LeftShiftEqual => println!("{}", "LeftShiftEqual"),
+                Tok::RightShiftEqual => println!("{}", "RightShiftEqual"),
+                Tok::RightShiftUnsigned => println!("{}", "RigthShiftUnsigned"),
+                Tok::RightShiftUnsignedEqual => println!("{}", "RightShiftUnsignedEqual")
             }
         }
     }

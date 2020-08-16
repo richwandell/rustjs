@@ -134,6 +134,47 @@ fn find_const(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     return Ok(vec![Tok::Const, Tok::Name { name: word }]);
 }
 
+fn find_bitwise(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
+    let mut word = String::from("");
+    word.push(ch);
+
+    loop {
+        let ch = it.next();
+        match ch {
+            Ok(ch) => {
+                if ch != '<' && ch != '>' && ch != '=' {
+                    it.prev();
+                    break
+                }
+                word.push(ch);
+            }
+            Err(e) => {
+                break
+            }
+        }
+    }
+    word = word.trim().parse().unwrap();
+    if word == "<<" {
+        return Ok(vec![Tok::LeftShift]);
+    }
+    if word == ">>" {
+        return Ok(vec![Tok::RightShift]);
+    }
+    if word == "<<=" {
+        return Ok(vec![Tok::LeftShiftEqual]);
+    }
+    if word == ">>=" {
+        return Ok(vec![Tok::RightShiftEqual]);
+    }
+    if word == ">>>" {
+        return Ok(vec![Tok::RightShiftUnsigned]);
+    }
+    if word == ">>>=" {
+        return Ok(vec![Tok::RightShiftUnsignedEqual]);
+    }
+    return Err(LexError::Error { text: String::from("Bitwise error") });
+}
+
 pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
 
@@ -179,6 +220,25 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     return find_string_double_quote(it);
                 }
 
+                if ch.is_numeric() {
+                    return find_float(it, ch);
+                }
+
+                if ch == '>' || ch == '<' {
+                    let result = find_bitwise(it, ch);
+                    match result {
+                        Ok(mut tokens) => {
+                            if word.len() > 0 {
+                                tokens.insert(0, Tok::Name {name: String::from(&word)});
+                            }
+                            return Ok(tokens)
+                        }
+                        Err(e) => {
+                            return Err(e)
+                        }
+                    }
+                }
+
                 if ch == ';' {
                     return Ok(vec![Tok::Semi]);
                 }
@@ -205,10 +265,6 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
 
                 if ch == '*' {
                     return Ok(vec![Tok::Star]);
-                }
-
-                if ch.is_numeric() {
-                    return find_float(it, ch);
                 }
 
                 if ch != ' ' && ch != '\n' && ch != '\r' {
