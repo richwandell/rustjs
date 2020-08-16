@@ -145,6 +145,16 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     return Ok(vec![Tok::Name { name: word }, Tok::Dot]);
                 }
 
+                if ch == '(' {
+                    if word.len() > 0 {
+                        if word == "function" {
+                            return Ok(vec![Tok::Function, Tok::Lpar]);
+                        }
+                        return Ok(vec![Tok::Name { name: word }, Tok::Lpar]);
+                    }
+                    return Ok(vec![Tok::Lpar]);
+                }
+
                 if ch == ' ' && word.len() > 0 {
                     if word == "let" {
                         return find_let(it);
@@ -155,17 +165,10 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     if word == "return" {
                         return Ok(vec![Tok::Return]);
                     }
-                    return Ok(vec![Tok::Name { name: word }]);
-                }
-
-                if ch == '(' {
-                    if word.len() > 0 {
-                        if word == "function" {
-                            return Ok(vec![Tok::Function, Tok::Lpar]);
-                        }
-                        return Ok(vec![Tok::Name { name: word }, Tok::Lpar]);
+                    if word == "function" {
+                        return Ok(vec![Tok::Function]);
                     }
-                    return Ok(vec![Tok::Lpar]);
+                    return Ok(vec![Tok::Name { name: word }]);
                 }
 
                 if ch == '=' {
