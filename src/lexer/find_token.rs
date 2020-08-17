@@ -108,7 +108,7 @@ fn find_let(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
         }
     }
     word = word.trim().parse().unwrap();
-    return Ok(vec![Tok::Let, Tok::Name { name: word }]);
+    return Ok(vec![Tok::StartStatement, Tok::Let, Tok::Name { name: word }]);
 }
 
 fn find_const(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
@@ -131,7 +131,7 @@ fn find_const(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
         }
     }
     word = word.trim().parse().unwrap();
-    return Ok(vec![Tok::Const, Tok::Name { name: word }]);
+    return Ok(vec![Tok::StartStatement, Tok::Const, Tok::Name { name: word }]);
 }
 
 fn find_bitwise(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
@@ -173,6 +173,24 @@ fn find_bitwise(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError>
         return Ok(vec![Tok::RightShiftUnsignedEqual]);
     }
     return Err(LexError::Error { text: String::from("Bitwise error") });
+}
+
+fn find_end_of_line(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
+    loop {
+        let ch = it.next();
+        match ch {
+            Ok(ch) => {
+                if ch != '\r' && ch != '\n' {
+                    it.prev();
+                    break
+                }
+            }
+            Err(e) => {
+                break
+            }
+        }
+    }
+    return Ok(vec![Tok::EndOfLine])
 }
 
 pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
@@ -224,6 +242,10 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     return find_float(it, ch);
                 }
 
+                if ch == '\r' || ch == '\n' {
+                    return find_end_of_line(it);
+                }
+
                 if ch == '>' || ch == '<' {
                     let result = find_bitwise(it, ch);
                     match result {
@@ -265,6 +287,10 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
 
                 if ch == '*' {
                     return Ok(vec![Tok::Star]);
+                }
+
+                if ch == '/' {
+                    return Ok(vec![Tok::Bslash]);
                 }
 
                 if ch != ' ' && ch != '\n' && ch != '\r' {

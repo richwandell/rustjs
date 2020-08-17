@@ -54,6 +54,7 @@ pub enum Tok {
     StartProgram,
     StartStatement,
     StartExpression,
+    EndOfLine,
     EndOfFile,
     Lpar, // (
     Rpar, // )
