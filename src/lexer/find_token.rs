@@ -134,7 +134,7 @@ fn find_const(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     return Ok(vec![Tok::StartStatement, Tok::Const, Tok::Name { name: word }]);
 }
 
-fn find_bitwise(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
+fn find_gt_lt(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     word.push(ch);
 
@@ -154,6 +154,18 @@ fn find_bitwise(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError>
         }
     }
     word = word.trim().parse().unwrap();
+    if word == ">" {
+        return Ok(vec![Tok::Greater]);
+    }
+    if word == ">=" {
+        return Ok(vec![Tok::GreaterEqual]);
+    }
+    if word == "<" {
+        return Ok(vec![Tok::Less]);
+    }
+    if word == "<=" {
+        return Ok(vec![Tok::LessEqual]);
+    }
     if word == "<<" {
         return Ok(vec![Tok::LeftShift]);
     }
@@ -172,7 +184,56 @@ fn find_bitwise(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError>
     if word == ">>>=" {
         return Ok(vec![Tok::RightShiftUnsignedEqual]);
     }
-    return Err(LexError::Error { text: String::from("Bitwise error") });
+    return Err(LexError::Error { text: String::from("Unexpected Token") });
+}
+
+fn find_if(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
+    it.prev();
+    let mut parens = vec![];
+
+    // find the first paren
+    loop {
+        let ch = it.next();
+        match ch {
+            Ok(ch) => {
+                if ch == '(' {
+                    parens.push("(");
+                    break;
+                }
+                if ch != ' ' {
+                    return Err(LexError::Error { text: String::from("Syntax error") });
+                }
+            }
+            Err(e) => {
+                return Err(LexError::Error { text: String::from("Syntax error") });
+            }
+        }
+    }
+
+    let mut return_tokens = vec![Tok::If, Tok::Lpar];
+    loop {
+        let tokens = find_token(it);
+        match tokens {
+            Ok(tokens) => {
+                for token in tokens {
+                    if token == Tok::Lpar {
+                        parens.push("(");
+                    } else if token == Tok::Rpar {
+                        parens.pop();
+                    }
+                    return_tokens.push(token);
+                }
+            }
+            _ => {
+                return Err(LexError::Error { text: String::from("Unexpected Token") });
+            }
+        }
+
+        if parens.len() == 0 {
+            break;
+        }
+    }
+    return Ok(return_tokens);
 }
 
 fn find_end_of_line(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
@@ -209,6 +270,9 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                         if word == "function" {
                             return Ok(vec![Tok::Function, Tok::Lpar]);
                         }
+                        if word == "if" {
+                            return find_if(it);
+                        }
                         return Ok(vec![Tok::Name { name: word }, Tok::Lpar]);
                     }
                     return Ok(vec![Tok::Lpar]);
@@ -226,6 +290,9 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     }
                     if word == "function" {
                         return Ok(vec![Tok::Function]);
+                    }
+                    if word == "if" {
+                        return find_if(it);
                     }
                     return Ok(vec![Tok::Name { name: word }]);
                 }
@@ -247,7 +314,7 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                 }
 
                 if ch == '>' || ch == '<' {
-                    let result = find_bitwise(it, ch);
+                    let result = find_gt_lt(it, ch);
                     match result {
                         Ok(mut tokens) => {
                             if word.len() > 0 {
@@ -266,6 +333,9 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                 }
 
                 if ch == ')' {
+                    if word.len() > 0 {
+                        return Ok(vec![Tok::Name {name: word}, Tok::Rpar]);
+                    }
                     return Ok(vec![Tok::Rpar]);
                 }
 
@@ -291,6 +361,21 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
 
                 if ch == '/' {
                     return Ok(vec![Tok::Bslash]);
+                }
+
+                if ch == '[' {
+                    return Ok(vec![Tok::Lsqb]);
+                }
+
+                if ch == ']' {
+                    return Ok(vec![Tok::Rsqb]);
+                }
+
+                if ch == ',' {
+                    if word.len() > 0 {
+                        return Ok(vec![Tok::Name {name: word}, Tok::Comma]);
+                    }
+                    return Ok(vec![Tok::Comma]);
                 }
 
                 if ch != ' ' && ch != '\n' && ch != '\r' {

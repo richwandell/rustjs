@@ -24,7 +24,7 @@ impl Lexer {
 
     pub fn parse(&mut self, mut parser: Parser, file: String) -> Vec<Expression> {
         let mut it = StringIterator::new(file.chars());
-        self.add_token(Tok::StartProgram);
+        parser.add_token(Tok::StartProgram);
 
         loop {
             let token = find_token(&mut it);
@@ -32,7 +32,7 @@ impl Lexer {
             match token {
                 Ok(tokens) => {
                     for token in tokens {
-                        parser.add_token(&token);
+                        parser.add_token(token);
                     }
                 }
                 Err(e) => {
@@ -52,7 +52,24 @@ impl Lexer {
         return parser.ast_tree;
     }
 
-    pub fn lex(&mut self, file: String) -> &Vec<Tok> {
+    fn copy(&mut self) -> Vec<Tok> {
+        let mut tokens = vec![];
+        loop {
+            let ex = self.tokens.pop();
+            match ex {
+                Some(token) => {
+                    tokens.push(token);
+                }
+                None => {
+                    break
+                }
+            }
+        }
+        tokens.reverse();
+        return tokens;
+    }
+
+    pub fn lex(&mut self, file: String) -> Vec<Tok> {
         let mut it = StringIterator::new(file.chars());
         self.add_token(Tok::StartProgram);
 
@@ -72,14 +89,14 @@ impl Lexer {
                             println!("{:?}", text);
                         },
                         LexError::End => {
-                            return &self.tokens;
+                            return self.copy();
                         }
                     }
                     break
                 }
             }
         }
-        return &self.tokens;
+        return self.copy();
     }
 
     pub(crate) fn add_token(&mut self, token: Tok) {

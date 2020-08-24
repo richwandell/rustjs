@@ -1,4 +1,6 @@
-#[derive(PartialEq)]
+use crate::lexer::js_token::Tok;
+
+#[derive(Debug, PartialEq)]
 pub enum Expression {
     Binop {
         a: Box<Expression>,
@@ -12,6 +14,9 @@ pub enum Expression {
     None,
     True, // The literal 'True'.
     False, // The literal 'False'.
+    CallExpression {
+        func: Box<Statement>
+    }
 }
 
 /// An operator for a binary operation (an operation with two operands).
@@ -28,4 +33,40 @@ pub enum Operator {
     BitXor, //
     BitAnd,
     FloorDiv,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Statement {
+    Break,
+
+    Continue,
+
+    Return { value: Option<Expression> },
+
+    /// Variable assignment. Note that we can assign to multiple targets.
+    Assign {
+        targets: Box<Expression>,
+        value: Box<Expression>,
+    },
+
+    /// An expression used as a statement.
+    Expression {
+        expression: Box<Expression>
+    },
+
+    If {
+        test: Box<Expression>,
+        body: Box<Expression>
+    },
+
+    While {
+        test: Box<Expression>,
+        body: Box<Expression>,
+    },
+
+    FunctionDef {
+        name: String,
+        params: Vec<Box<Tok>>,
+        body: Vec<Box<Expression>>
+    }
 }

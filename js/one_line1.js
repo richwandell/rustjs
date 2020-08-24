@@ -1,0 +1,1 @@
+tips.forEach((tip, i) => console.log(tip));

@@ -4,11 +4,12 @@ use crate::ast::parser::Parser;
 
 #[test]
 fn test_parser() {
-    let file = fs::read_to_string("js/math/div/div4.js");
+    let file = fs::read_to_string("js/function_expression.js");
 
     let mut lex = Lexer::new();
     let mut parser = Parser::new();
-    let expressions = lex.parse(parser, file.unwrap());
+    let tokens = lex.lex(file.unwrap());
+    let expressions = parser.parse(tokens);
 
     println!("hi")
 }
