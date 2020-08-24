@@ -11,6 +11,9 @@ pub enum Expression {
     Number {
         value: f64,
     },
+    Identifier {
+        name: String
+    },
     None,
     True, // The literal 'True'.
     False, // The literal 'False'.

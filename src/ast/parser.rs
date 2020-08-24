@@ -104,8 +104,64 @@ fn combine_expressions(last: Expression, next: Expression) -> Expression {
 
 impl Parser {
 
+    fn find_end_of_assignment(start: usize, tokens: &Vec<Tok>) -> usize {
+        let mut j = start + 1;
+
+        let mut current_type = "assignment";
+        while j < tokens.len() - 1 {
+            let token = tokens.get(j as usize).unwrap();
+
+            if current_type == "assignment" {
+                match token {
+                    Tok::Name { name } => {
+                        j += 1;
+                        current_type = "name";
+                    }
+                    _ => {
+                        return j;
+                    }
+                }
+            } else if (current_type == "name") {
+                match token {
+                    Tok::Equal => {
+                        j += 1;
+                        current_type = "equal";
+                    }
+                    _ => {
+                        return j;
+                    }
+                }
+            } else if (current_type == "equal") {
+                match token {
+                    Tok::Name {name} => {
+                        let k = Parser::find_end_of_expression(j, tokens);
+                        j = k + 1;
+                        current_type = "expression"
+                    }
+                    _ => {
+                        return j;
+                    }
+                }
+            } else if (current_type == "expression") {
+                match token {
+                    Tok::Lpar => {
+                        let k = Parser::find_matching_paren(j, tokens);
+                        j = k + 1;
+                    }
+                    Tok::Semi => {
+                        return j;
+                    }
+                    _ => {
+                        return j;
+                    }
+                }
+            }
+        }
+        return j;
+    }
+
     fn find_end_of_expression(start: usize, tokens: &Vec<Tok>) -> usize {
-        let mut j = start;
+        let mut j = start + 1;
 
         let mut current_type = "name";
         while j < tokens.len() - 1 {
@@ -143,9 +199,23 @@ impl Parser {
                     }
                 }
             } else if current_type == "lpar" {
-                let k = Parser::find_matching_paren(j+1, tokens);
+                let k = Parser::find_matching_paren(j - 1, tokens);
                 j = k;
                 current_type = "rpar";
+            } else if current_type == "rpar" {
+                match token {
+                    Tok::Lpar => {
+                        let k = Parser::find_matching_paren(j - 1, tokens);
+                        j = k;
+                        current_type = "rpar";
+                    }
+                    Tok::Semi => {
+                        return j;
+                    }
+                    _ => {
+                        return j;
+                    }
+                }
             } else {
                 j += 1;
             }
@@ -174,7 +244,7 @@ impl Parser {
 
     fn find_matching_paren(start: usize, tokens: &Vec<Tok>) -> usize {
         let mut j = start;
-        let mut lpar = 1;
+        let mut lpar = 0;
         while j < tokens.len() {
             let token = tokens.get(j as usize).unwrap();
             if token.eq(&Tok::Lpar) {
@@ -191,19 +261,52 @@ impl Parser {
     }
 
     pub fn parse(&mut self, tokens: Vec<Tok>) -> Vec<Expression> {
+        if tokens.len() == 1 {
+            let token = tokens.get(0).unwrap();
+            match token {
+                Tok::Float {mut value} => {
+                    return vec![Expression::Number {value}]
+                }
+                Tok::Name {name} => {
+                    return vec![Expression::Identifier {name: name.clone() }]
+                }
+                _ => {
+
+                }
+            }
+        }
+
+
         let mut i = 0;
         while i < tokens.len() - 1 {
             let token = tokens.get(i).unwrap();
             match token {
+                Tok::Let => {
+                    //assignment
+                    let j = Parser::find_end_of_assignment(i, &tokens);
+                    let t = tokens[i+3..=j].to_vec();
+                    let mut p = Parser::new();
+                    let out = p.parse(t);
+                    i = j;
+                }
                 Tok::Name {name} => {
+                    //expression
                     let j = Parser::find_end_of_expression(i+1, &tokens);
                     i = j;
                 }
                 Tok::Lpar => {
-                    let j = Parser::find_matching_paren(i+1, &tokens);
-                    i = j;
+                    let j = Parser::find_matching_paren(i, &tokens);
+                    if tokens.get(j + 1).unwrap().eq(&Tok::Lpar) {
+                        //call expression
+                        let j = Parser::find_matching_paren(j + 1, &tokens);
+                        i = j;
+                    } else {
+                        //paren expression
+                        i = j;
+                    }
                 }
                 Tok::Function => {
+                    //function
                     let j = Parser::find_end_of_function(i+1, &tokens);
                     i = j;
                 }
@@ -215,22 +318,22 @@ impl Parser {
 
 
 
-        for token in tokens {
-            self.add_token(token);
-        }
+        // for token in tokens {
+        //     self.add_token(token);
+        // }
         let mut expressions = vec![];
-        loop {
-            let ex = self.ast_tree.pop();
-            match ex {
-                Some(expression) => {
-                    expressions.push(expression);
-                }
-                None => {
-                    break
-                }
-            }
-        }
-        expressions.reverse();
+        // loop {
+        //     let ex = self.ast_tree.pop();
+        //     match ex {
+        //         Some(expression) => {
+        //             expressions.push(expression);
+        //         }
+        //         None => {
+        //             break
+        //         }
+        //     }
+        // }
+        // expressions.reverse();
         return expressions;
     }
 
