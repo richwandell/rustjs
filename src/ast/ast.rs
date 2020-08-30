@@ -11,14 +11,25 @@ pub enum Expression {
     Number {
         value: f64,
     },
+    String {
+        value: String
+    },
     Identifier {
         name: String
+    },
+    Literal {
+        value: String
     },
     None,
     True, // The literal 'True'.
     False, // The literal 'False'.
     CallExpression {
-        func: Box<Statement>
+        callee: Box<Expression>,
+        arguments: Vec<Tok>
+    },
+    MemberExpression {
+        object: Box<Expression>,
+        property: Box<Expression>
     }
 }
 
@@ -40,6 +51,9 @@ pub enum Operator {
 
 #[derive(Debug, PartialEq)]
 pub enum Statement {
+    //temporary non filled in statement
+    None,
+
     Break,
 
     Continue,
@@ -69,7 +83,18 @@ pub enum Statement {
 
     FunctionDef {
         name: String,
-        params: Vec<Box<Tok>>,
-        body: Vec<Box<Expression>>
+        params: Vec<Tok>,
+        body: Vec<JSItem>
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum JSItem {
+    Ex {
+        expression: Box<Expression>
+    },
+
+    St {
+        statement: Box<Statement>
     }
 }

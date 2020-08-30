@@ -1,13 +1,5 @@
-let a = 1;
-(function () {
-    {a:1}
-})()
+console(c, d).log(a, b)
 
-let a = console.log(1 + 2)(
-
-  5
-);
-
-function rich () {
-    console.log("hi")
+function rich (a, b) {
+    console.log(a, b);
 }

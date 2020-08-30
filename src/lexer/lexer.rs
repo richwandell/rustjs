@@ -22,36 +22,6 @@ impl Lexer {
         }
     }
 
-    pub fn parse(&mut self, mut parser: Parser, file: String) -> Vec<Expression> {
-        let mut it = StringIterator::new(file.chars());
-        parser.add_token(Tok::StartProgram);
-
-        loop {
-            let token = find_token(&mut it);
-
-            match token {
-                Ok(tokens) => {
-                    for token in tokens {
-                        parser.add_token(token);
-                    }
-                }
-                Err(e) => {
-                    match e {
-                        LexError::Error { text } => {
-                            self.test();
-                            println!("{:?}", text);
-                        },
-                        LexError::End => {
-                            break
-                        }
-                    }
-                    break
-                }
-            }
-        }
-        return parser.ast_tree;
-    }
-
     fn copy(&mut self) -> Vec<Tok> {
         let mut tokens = vec![];
         loop {

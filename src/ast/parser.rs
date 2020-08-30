@@ -1,35 +1,27 @@
 use crate::lexer::lexer::Lexer;
 
 use crate::lexer::js_token::Tok;
-use crate::ast::ast::{Operator, Expression, Statement};
+use crate::ast::ast::{Operator, Expression, Statement, JSItem};
 use std::ops::Deref;
+use std::borrow::Borrow;
+use crate::ast::ast::Expression::{CallExpression, Identifier};
 
 pub struct Parser {
     pub(crate) lexer: Lexer,
     pub ast_tree: Vec<Expression>,
-    function_body: Vec<char>,
-    function_tokens: Vec<Tok>,
-    in_function: bool,
-    function_name: String,
-    function_params: Vec<Tok>,
-
-    expression_body: Vec<char>,
-    expression_tokens: Vec<Tok>,
-    in_expression: bool,
-    in_block: bool
 }
 
 fn create_expression(last: Expression, tok: Tok) -> Expression {
     match tok {
-        Tok::Float{value} => {
+        Tok::Float { value } => {
             match last {
-                Expression::Binop {a, op, b} => {
+                Expression::Binop { a, op, b } => {
                     let last = *b;
                     let next = create_expression(last, tok);
-                    return Expression::Binop {a, op, b: Box::new(next) };
+                    return Expression::Binop { a, op, b: Box::new(next) };
                 }
                 _ => {
-                    return Expression::Number {value};
+                    return Expression::Number { value };
                 }
             }
         }
@@ -37,50 +29,50 @@ fn create_expression(last: Expression, tok: Tok) -> Expression {
             return Expression::Binop {
                 a: Box::new(last),
                 op: Operator::Add,
-                b: Box::new(Expression::None)
-            }
+                b: Box::new(Expression::None),
+            };
         }
         Tok::Star => {
             match last {
-                Expression::Binop {a, op, b} => {
+                Expression::Binop { a, op, b } => {
                     return Expression::Binop {
                         a,
                         op,
                         b: Box::from(Expression::Binop {
                             a: b,
                             op: Operator::Mult,
-                            b: Box::new(Expression::None)
-                        })
+                            b: Box::new(Expression::None),
+                        }),
                     };
                 }
                 _ => {
                     return Expression::Binop {
                         a: Box::new(last),
                         op: Operator::Mult,
-                        b: Box::new(Expression::None)
-                    }
+                        b: Box::new(Expression::None),
+                    };
                 }
             }
         }
         Tok::Bslash => {
             match last {
-                Expression::Binop {a, op, b} => {
+                Expression::Binop { a, op, b } => {
                     return Expression::Binop {
                         a,
                         op,
                         b: Box::from(Expression::Binop {
                             a: b,
                             op: Operator::Div,
-                            b: Box::new(Expression::None)
-                        })
+                            b: Box::new(Expression::None),
+                        }),
                     };
                 }
                 _ => {
                     return Expression::Binop {
                         a: Box::new(last),
                         op: Operator::Div,
-                        b: Box::new(Expression::None)
-                    }
+                        b: Box::new(Expression::None),
+                    };
                 }
             }
         }
@@ -90,20 +82,7 @@ fn create_expression(last: Expression, tok: Tok) -> Expression {
     }
 }
 
-fn combine_expressions(last: Expression, next: Expression) -> Expression {
-    match last {
-        Expression::Binop { a, op, b } => {
-            return Expression::Binop {a, op, b: Box::new(next) };
-        }
-        _ => {
-            return next;
-        }
-    }
-    return Expression::None;
-}
-
 impl Parser {
-
     fn find_end_of_assignment(start: usize, tokens: &Vec<Tok>) -> usize {
         let mut j = start + 1;
 
@@ -133,7 +112,7 @@ impl Parser {
                 }
             } else if (current_type == "equal") {
                 match token {
-                    Tok::Name {name} => {
+                    Tok::Name { name } => {
                         let k = Parser::find_end_of_expression(j, tokens);
                         j = k + 1;
                         current_type = "expression"
@@ -163,51 +142,58 @@ impl Parser {
     fn find_end_of_expression(start: usize, tokens: &Vec<Tok>) -> usize {
         let mut j = start + 1;
 
-        let mut current_type = "name";
+        let mut prev_type = "name";
         while j < tokens.len() - 1 {
             let token = tokens.get(j as usize).unwrap();
-            if current_type == "name" {
+            if prev_type == "name" {
                 match token {
                     Tok::Lpar => {
-                        current_type = "lpar";
+                        prev_type = "lpar";
                         j += 1;
                     }
                     Tok::Dot => {
-                        current_type = "dot";
+                        prev_type = "dot";
                         j += 1;
                     }
                     Tok::Equal => {
-                        current_type = "equal";
+                        prev_type = "equal";
                         j += 1;
                     }
                     Tok::PlusEqual => {
-                        current_type = "plus_equal";
+                        prev_type = "plus_equal";
                         j += 1;
                     }
                     _ => {
                         return j;
                     }
                 }
-            } else if current_type == "dot" {
+            } else if prev_type == "dot" {
                 match token {
-                    Tok::Name {name} => {
-                        current_type = "name";
+                    Tok::Name { name } => {
+                        prev_type = "name";
                         j += 1;
                     }
                     _ => {
                         return j;
                     }
                 }
-            } else if current_type == "lpar" {
+            } else if prev_type == "lpar" {
                 let k = Parser::find_matching_paren(j - 1, tokens);
-                j = k;
-                current_type = "rpar";
-            } else if current_type == "rpar" {
+                j = k + 1;
+                prev_type = "rpar";
+            } else if prev_type == "rpar" {
                 match token {
                     Tok::Lpar => {
                         let k = Parser::find_matching_paren(j - 1, tokens);
                         j = k;
-                        current_type = "rpar";
+                        prev_type = "rpar";
+                    }
+                    Tok::EndOfLine => {
+                        return j - 1;
+                    }
+                    Tok::Dot => {
+                        prev_type = "dot";
+                        j += 1;
                     }
                     Tok::Semi => {
                         return j;
@@ -234,7 +220,7 @@ impl Parser {
             } else if token.eq(&Tok::Rbrace) {
                 lbrace -= 1;
                 if lbrace == 0 {
-                    break
+                    break;
                 }
             }
             j += 1;
@@ -252,7 +238,7 @@ impl Parser {
             } else if token.eq(&Tok::Rpar) {
                 lpar -= 1;
                 if lpar == 0 {
-                    break
+                    break;
                 }
             }
             j += 1;
@@ -260,23 +246,21 @@ impl Parser {
         return j;
     }
 
-    pub fn parse(&mut self, tokens: Vec<Tok>) -> Vec<Expression> {
+    pub fn parse(&mut self, tokens: Vec<Tok>) -> Vec<JSItem> {
         if tokens.len() == 1 {
             let token = tokens.get(0).unwrap();
             match token {
-                Tok::Float {mut value} => {
-                    return vec![Expression::Number {value}]
+                Tok::Float { mut value } => {
+                    return vec![JSItem::Ex { expression: Box::new(Expression::Number { value }) }];
                 }
-                Tok::Name {name} => {
-                    return vec![Expression::Identifier {name: name.clone() }]
+                Tok::Name { name } => {
+                    return vec![JSItem::Ex { expression: Box::new(Expression::Identifier { name: name.clone() }) }];
                 }
-                _ => {
-
-                }
+                _ => {}
             }
         }
 
-
+        let mut js_items = vec![];
         let mut i = 0;
         while i < tokens.len() - 1 {
             let token = tokens.get(i).unwrap();
@@ -284,14 +268,17 @@ impl Parser {
                 Tok::Let => {
                     //assignment
                     let j = Parser::find_end_of_assignment(i, &tokens);
-                    let t = tokens[i+3..=j].to_vec();
+                    let t = tokens[i + 3..=j].to_vec();
                     let mut p = Parser::new();
                     let out = p.parse(t);
                     i = j;
                 }
-                Tok::Name {name} => {
+                Tok::Name { name } => {
                     //expression
-                    let j = Parser::find_end_of_expression(i+1, &tokens);
+                    let j = Parser::find_end_of_expression(i, &tokens);
+                    let mut t = tokens[i..=j].to_vec();
+                    let ex = self.create_expression(t);
+                    js_items.push(ex);
                     i = j;
                 }
                 Tok::Lpar => {
@@ -307,7 +294,10 @@ impl Parser {
                 }
                 Tok::Function => {
                     //function
-                    let j = Parser::find_end_of_function(i+1, &tokens);
+                    let j = Parser::find_end_of_function(i + 1, &tokens);
+                    let mut t = tokens[i..=j].to_vec();
+                    let func = self.create_function(t);
+                    js_items.push(func);
                     i = j;
                 }
                 _ => {
@@ -316,246 +306,349 @@ impl Parser {
             }
         }
 
-
-
-        // for token in tokens {
-        //     self.add_token(token);
-        // }
-        let mut expressions = vec![];
-        // loop {
-        //     let ex = self.ast_tree.pop();
-        //     match ex {
-        //         Some(expression) => {
-        //             expressions.push(expression);
-        //         }
-        //         None => {
-        //             break
-        //         }
-        //     }
-        // }
-        // expressions.reverse();
-        return expressions;
+        return js_items;
     }
 
-    pub fn add_token(&mut self, tok: Tok) {
-        match tok {
-            Tok::Function => {
-                if !self.in_expression {
-                    self.in_function = true;
+    fn combine_dot(last_exp: Expression, tok: Tok) -> Expression {
+        match last_exp {
+            Expression::CallExpression { callee, arguments } => {
+                match *callee {
+                    Expression::Identifier { name } => {
+                        return Expression::CallExpression {
+                            callee: Box::new(Expression::MemberExpression {
+                                object: Box::new(Expression::None),
+                                property: Box::new(Expression::Identifier { name }),
+                            }),
+                            arguments,
+                        };
+                    }
+                    Expression::MemberExpression { object, property } => {
+                        let new_object = Parser::combine_dot(*object, tok);
+
+                        return Expression::CallExpression {
+                            callee: Box::new(Expression::MemberExpression {
+                                object: Box::from(new_object),
+                                property
+                            }),
+                            arguments
+                        };
+                    }
+                    _ => {}
                 }
-                Parser::process_token(self, tok);
             }
-            Tok::Lpar => {
-                if !self.in_function {
-                    self.in_expression = true;
+            Expression::MemberExpression { object, property } => {
+                match *object {
+                    Expression::Identifier {name} => {
+                        let new_object = Parser::combine_dot(Expression::Identifier {name}, tok);
+                        return Expression::MemberExpression {
+                            object: Box::from(new_object),
+                            property
+                        }
+                    }
+                    Expression::None => {
+
+                    }
+                    Expression::MemberExpression {object, property} => {
+                        let new_object = Parser::combine_dot(*object, tok);
+                        let new_expression = Expression::MemberExpression {
+                            object: Box::new(new_object),
+                            property
+                        };
+                        return new_expression;
+                    }
+                    _ => {}
                 }
-                Parser::process_token(self, tok);
             }
-            Tok::Name {name} => {
-                if !self.in_function && !self.in_block {
-                    self.in_expression = true;
+            Expression::Identifier { name } => {
+                return Expression::MemberExpression {
+                    object: Box::new(Expression::None),
+                    property: Box::new(Identifier {name})
                 }
-                Parser::process_token(self, Tok::Name {name});
             }
-            _ => {
-                Parser::process_token(self, tok);
+            _ => {}
+        }
+        return Expression::None;
+    }
+
+    fn combine_name(last_exp: Expression, name: String) -> Expression {
+        match last_exp {
+            Expression::CallExpression { callee, arguments } => {
+                match *callee {
+                    Expression::None => {
+                        return Expression::CallExpression {
+                            callee: Box::new(Expression::Identifier { name }),
+                            arguments
+                        };
+                    }
+                    Expression::MemberExpression { object, property } => {
+                        let new_object = Parser::combine_name(*object, name);
+
+                        return Expression::CallExpression {
+                            callee: Box::new(Expression::MemberExpression {
+                                object: Box::from(new_object),
+                                property
+                            }),
+                            arguments
+                        };
+                    }
+                    _ => {}
+                }
+            }
+            Expression::Identifier { name } => {
+                return Expression::MemberExpression {
+                    object: Box::new(Expression::None),
+                    property: Box::new(Identifier {name})
+                }
+            }
+            Expression::None => {
+                return Expression::Identifier {name};
+            }
+            Expression::MemberExpression { object, property } => {
+                let outer_property = property;
+                match *object {
+                    Expression::None => {
+                        return Expression::MemberExpression {
+                            object: Box::from(Parser::combine_name(Expression::None, name)),
+                            property: outer_property
+                        }
+                    }
+                    Expression::MemberExpression {object, property} => {
+                        return Expression::MemberExpression {
+                            object: Box::from(Expression::MemberExpression {
+                                object: Box::new(Parser::combine_name(*object, name)),
+                                property
+                            }),
+                            property: outer_property
+                        };
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+        return Expression::None;
+    }
+
+    fn combine_call(last_exp: Expression, params: Vec<Tok>) -> Expression {
+        match last_exp {
+            Expression::None => {
+                return Expression::CallExpression {
+                    callee: Box::new(Expression::None),
+                    arguments: params
+                };
+            }
+            Expression::CallExpression { callee, arguments } => {
+                match *callee {
+                    Expression::None => {
+                        return Expression::CallExpression {
+                            callee: Box::new(Expression::CallExpression {
+                                callee: Box::new(Expression::None),
+                                arguments: params
+                            }),
+                            arguments
+                        };
+                    }
+                    Expression::MemberExpression { object, property } => {
+                        let new_object = Parser::combine_call(*object, params);
+
+                        return Expression::CallExpression {
+                            callee: Box::new(Expression::MemberExpression {
+                                object: Box::from(new_object),
+                                property
+                            }),
+                            arguments
+                        };
+                    }
+                    _ => {}
+                }
+            }
+            Expression::Identifier { name } => {
+                return Expression::MemberExpression {
+                    object: Box::new(Expression::None),
+                    property: Box::new(Identifier {name})
+                }
+            }
+            Expression::MemberExpression { object, property } => {
+                let outer_property = property;
+                match *object {
+                    Expression::None => {
+                        return Expression::MemberExpression {
+                            object: Box::from(Parser::combine_call(Expression::None, params)),
+                            property: outer_property
+                        }
+                    }
+                    Expression::MemberExpression {object, property} => {
+                        return Expression::MemberExpression {
+                            object: Box::from(Expression::MemberExpression {
+                                object: Box::new(Parser::combine_call(*object, params)),
+                                property
+                            }),
+                            property: outer_property
+                        };
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+        return Expression::None;
+    }
+
+    fn create_expression(&mut self, mut tokens: Vec<Tok>) -> JSItem {
+        //find out if we have a call expression
+        let mut call_expression_params_stack = vec![];
+        let mut in_call_expression_params = false;
+        let mut call_expression_params = vec![];
+        let mut expression_stack = vec![];
+        while tokens.len() > 0 {
+            let token = tokens.pop().unwrap();
+            match token {
+                Tok::Dot => {
+                    let ex = expression_stack.pop().unwrap();
+                    let exp = Parser::combine_dot(ex, token);
+                    expression_stack.push(exp);
+                }
+                Tok::Name { name } => {
+                    if in_call_expression_params {
+                        call_expression_params.push(Tok::Name { name });
+                    } else {
+                        let ex = expression_stack.pop().unwrap();
+                        let exp = Parser::combine_name(ex, name);
+                        expression_stack.push(exp);
+                    }
+                }
+                Tok::Semi | Tok::EndOfLine => {}
+                Tok::Comma => {}
+                Tok::Rpar => {
+                    if !in_call_expression_params {
+                        call_expression_params_stack.push(")");
+                        in_call_expression_params = true;
+                    }
+                }
+                Tok::Lpar => {
+                    if in_call_expression_params {
+                        call_expression_params_stack.pop();
+                        if call_expression_params_stack.is_empty() {
+                            if expression_stack.len() > 0 {
+                                let ex = expression_stack.pop().unwrap();
+                                call_expression_params.reverse();
+                                let exp = Parser::combine_call(ex, call_expression_params.clone());
+                                expression_stack.push(exp);
+                            } else {
+                                call_expression_params.reverse();
+                                expression_stack.push(Expression::CallExpression {
+                                    callee: Box::new(Expression::None),
+                                    arguments: call_expression_params.clone(),
+                                });
+                            }
+                            call_expression_params.clear();
+                            in_call_expression_params = false;
+                        } else {
+                            call_expression_params.push(token);
+                        }
+                    }
+                    //TODO: do something with other tokens
+                    else {}
+                }
+                _ => {
+                    if in_call_expression_params {
+                        call_expression_params.push(token);
+                    }
+                }
             }
         }
+        let expression = Box::new(expression_stack.pop().unwrap());
+        return JSItem::Ex { expression };
+    }
+
+    fn create_function(&mut self, mut tokens: Vec<Tok>) -> JSItem {
+        tokens.reverse();
+
+        //get rid of function
+        tokens.pop();
+        //function name should be next
+        let mut function_name = String::from("");
+        match tokens.pop().unwrap() {
+            Tok::Name { name } => {
+                function_name = name;
+            }
+            _ => {}
+        }
+        let mut function_params = vec![];
+        let mut function_body = vec![];
+        let mut stack = vec![];
+        let mut in_params = true;
+        let mut in_body = false;
+        while tokens.len() > 0 {
+            let token = tokens.pop().unwrap();
+            match token {
+                Tok::Lpar => {
+                    if !in_body {
+                        stack.push("(");
+                        in_params = true;
+                    } else {
+                        function_body.push(token);
+                    }
+                }
+                Tok::Rpar => {
+                    if in_params {
+                        stack.pop();
+                        if stack.is_empty() {
+                            in_params = false;
+                        }
+                    } else {
+                        function_body.push(token);
+                    }
+                }
+                Tok::Lbrace => {
+                    if stack.is_empty() {
+                        in_body = true;
+                    } else {
+                        function_body.push(token);
+                    }
+                    stack.push("{");
+                }
+                Tok::Rbrace => {
+                    if in_body {
+                        stack.pop();
+                        if stack.is_empty() {
+                            in_body = false;
+                        } else {
+                            function_body.push(token);
+                        }
+                    }
+                }
+                Tok::Comma => {
+                    if !in_params {
+                        function_body.push(token);
+                    }
+                }
+                _ => {
+                    if in_params {
+                        function_params.push(token);
+                    } else if in_body {
+                        function_body.push(token);
+                    }
+                }
+            }
+        }
+
+        let mut p = Parser::new();
+        let out = p.parse(function_body);
+
+        let statement = Box::new(Statement::FunctionDef {
+            name: function_name,
+            params: function_params,
+            body: out,
+        });
+        let item = JSItem::St { statement };
+        return item;
     }
 
     pub fn new() -> Parser {
         Parser {
             lexer: Lexer::new(),
-            ast_tree: vec![],
-            function_body: vec![],
-            function_tokens: vec![],
-            in_function: false,
-            function_name: "".to_string(),
-            function_params: vec![],
-            expression_body: vec![],
-            expression_tokens: vec![],
-            in_expression: false,
-            in_block: false
-        }
-    }
-
-    fn get_function_tokens(&mut self) -> Vec<Tok> {
-        let mut tokens = vec![];
-
-        loop {
-            let token = self.function_tokens.pop();
-            match token {
-                Some(token) => {
-                    tokens.push(token);
-                }
-                None => {
-                    break
-                }
-            }
-        }
-        tokens.reverse();
-        return tokens;
-    }
-
-    fn get_function_params(&mut self) -> Vec<Tok> {
-        let mut tokens = vec![];
-
-        loop {
-            let token = self.function_params.pop();
-            match token {
-                Some(token) => {
-                    tokens.push(token);
-                }
-                None => {
-                    break
-                }
-            }
-        }
-        tokens.reverse();
-        return tokens;
-    }
-
-    fn get_expression_tokens(&mut self) -> Vec<Tok> {
-        let mut tokens = vec![];
-
-        loop {
-            let token = self.expression_tokens.pop();
-            match token {
-                Some(token) => {
-                    tokens.push(token);
-                    if self.expression_tokens.len() == 1 {
-                        break
-                    }
-                }
-                None => {
-                    break
-                }
-            }
-        }
-        self.expression_tokens.pop();
-        tokens.reverse();
-        return tokens;
-    }
-
-    fn process_token_in_function(&mut self, tok: Tok)  {
-        match tok {
-            Tok::Name{name} => {
-                if self.in_block {
-                    self.function_tokens.push(Tok::Name {name});
-                } else if self.function_name == "" && self.function_params.last().unwrap().eq(&Tok::Function) {
-                    self.function_name = name;
-                } else {
-                    self.function_params.push(Tok::Name {name});
-                }
-            }
-            Tok::Lpar => {
-                if self.in_block {
-                    self.function_tokens.push(tok);
-                } else {
-                    self.function_params.push(tok);
-                }
-            }
-            Tok::Rpar => {
-                if self.in_block {
-                    self.function_tokens.push(tok);
-                } else {
-                    self.function_params.push(tok);
-                }
-            }
-            Tok::Lbrace => {
-                if !self.in_block {
-                    self.in_block = true;
-                }
-                self.function_body.push('{');
-            }
-            Tok::Rbrace => {
-                self.function_body.pop();
-                if self.function_body.len() == 0 {
-                    self.in_function = false;
-                    self.end_function();
-                    // let function_tokens = self.get_function_tokens();
-                    // let last= self.ast_tree.pop().unwrap_or(Expression::None);
-                    // let ex = combine_expressions(last, self.create_function(function_tokens));
-                    // self.ast_tree.push(ex);
-                }
-            }
-            Tok::EndOfLine => {
-                if self.function_tokens.len() > 0 {
-                    self.function_tokens.push(tok);
-                }
-            }
-            _ => {
-                if self.in_block {
-                    self.function_tokens.push(tok)
-                } else {
-                    self.function_params.push(tok);
-                }
-            }
-        }
-    }
-
-    fn end_function(&mut self) {
-        let function_tokens = self.get_function_tokens();
-        let mut parser = Parser::new();
-        let expressions = parser.parse(function_tokens);
-        // let function_params = self.get_function_params();
-        // let function_expression = Statement::FunctionDef {
-        //     name: "".to_string(),
-        //     params: vec![],
-        //     body: vec![]
-        // };
-    }
-
-    fn end_expression(&mut self) {
-        let expression_tokens = self.get_expression_tokens();
-        let mut parser = Parser::new();
-        let item = parser.parse(expression_tokens);
-
-
-        // let last= self.ast_tree.pop().unwrap_or(Expression::None);
-    }
-
-    fn is_call_expression_end(&mut self) {
-        for i in self.expression_tokens.len()..0 {
-
-        }
-    }
-
-    fn process_token_in_expression(&mut self, tok: Tok) {
-        if tok.eq(&Tok::Lpar) {
-            self.expression_body.push('(');
-        } else if tok.eq(&Tok::Rpar) {
-            self.expression_body.pop();
-            if self.expression_body.len() == 0 {
-                self.in_expression = false;
-                self.end_expression();
-                // let ex = combine_expressions(last, self.create_expression(expression_tokens));
-                // self.ast_tree.push(ex);
-            }
-        }
-        self.expression_tokens.push(tok);
-    }
-
-    pub fn process_token(&mut self, tok: Tok) {
-        let is_in_function = self.in_function.to_owned();
-        let is_in_expression = self.in_expression.to_owned();
-        if is_in_function {
-            self.process_token_in_function(tok);
-        } else if is_in_expression {
-            self.process_token_in_expression(tok);
-        } else {
-            let last;
-            if tok.eq(&Tok::Semi)
-                || tok.eq(&Tok::EndOfLine)
-                || tok.eq(&Tok::Return)
-                || tok.eq(&Tok::StartProgram)
-            {
-                return;
-            } else {
-                last = self.ast_tree.pop().unwrap_or(Expression::None);
-            }
-            let op = create_expression(last, tok);
-            self.ast_tree.push(op);
+            ast_tree: vec![]
         }
     }
 

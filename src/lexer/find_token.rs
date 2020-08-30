@@ -261,8 +261,11 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
         let ch = it.next();
         match ch {
             Ok(ch) => {
-                if ch == '.' && word.len() > 0 {
-                    return Ok(vec![Tok::Name { name: word }, Tok::Dot]);
+                if ch == '.' {
+                    if word.len() > 0 {
+                        return Ok(vec![Tok::Name { name: word }, Tok::Dot]);
+                    }
+                    return Ok(vec![Tok::Dot]);
                 }
 
                 if ch == '(' {
