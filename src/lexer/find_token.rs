@@ -1,6 +1,3 @@
-use std::str::Chars;
-use std::error::Error;
-use std::convert::TryFrom;
 use crate::lexer::lexer::LexError;
 use crate::lexer::string_iterator::StringIterator;
 use crate::lexer::js_token::Tok;
@@ -20,7 +17,7 @@ fn find_float(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
 
                 word.push(ch);
             }
-            Err(e) => {
+            Err(_) => {
                 break
             }
         }
@@ -44,7 +41,7 @@ fn find_string_double_quote(it: &mut StringIterator) -> Result<Vec<Tok>, LexErro
 
                 word.push(ch);
             }
-            Err(e) => {
+            Err(_) => {
                 break
             }
         }
@@ -66,7 +63,7 @@ fn find_equal(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
 
                 word.push(ch);
             }
-            Err(e) => {
+            Err(_) => {
                 break
             }
         }
@@ -102,7 +99,7 @@ fn find_let(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     break;
                 }
             }
-            Err(e) => {
+            Err(_) => {
                 break
             }
         }
@@ -125,7 +122,7 @@ fn find_const(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     break;
                 }
             }
-            Err(e) => {
+            Err(_) => {
                 break
             }
         }
@@ -148,7 +145,7 @@ fn find_gt_lt(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
                 }
                 word.push(ch);
             }
-            Err(e) => {
+            Err(_) => {
                 break
             }
         }
@@ -204,7 +201,7 @@ fn find_if(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     return Err(LexError::Error { text: String::from("Syntax error") });
                 }
             }
-            Err(e) => {
+            Err(_) => {
                 return Err(LexError::Error { text: String::from("Syntax error") });
             }
         }
@@ -246,7 +243,7 @@ fn find_end_of_line(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     break
                 }
             }
-            Err(e) => {
+            Err(_) => {
                 break
             }
         }
@@ -385,7 +382,7 @@ pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
                     word.push(ch);
                 }
             }
-            Err(e) => {
+            Err(_) => {
                 return Err(LexError::End);
             }
         }

@@ -2,8 +2,6 @@ mod lexer;
 mod parser;
 
 use std::{env, fs};
-use std::str::Chars;
-use crate::lexer::find_token::find_token;
 use crate::lexer::lexer::Lexer;
 
 

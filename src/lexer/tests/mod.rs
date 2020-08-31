@@ -13,7 +13,7 @@ fn test_iterator() {
     loop {
         let ch = it.next();
         match ch {
-            Err(e) => {
+            Err(_) => {
                 break
             }
             Ok(ch) => {

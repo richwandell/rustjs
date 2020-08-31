@@ -1,5 +1,4 @@
 use std::fs;
-use std::any::Any;
 use crate::lexer::lexer::Lexer;
 use crate::lexer::js_token::Tok;
 

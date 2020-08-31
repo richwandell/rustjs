@@ -1,9 +1,6 @@
-use std::any::Any;
 use crate::lexer::find_token::find_token;
-use crate::lexer::string_iterator::StringIterator;
 use crate::lexer::js_token::Tok;
-use crate::parser::parser::Parser;
-use crate::parser::symbols::Expression;
+use crate::lexer::string_iterator::StringIterator;
 
 pub enum LexError {
     Error { text: String },

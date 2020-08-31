@@ -13,7 +13,19 @@ fn test_simple_add() {
     let tokens = lex.lex(file.unwrap());
     let expressions = parser.parse(tokens);
 
-    println!("hi")
+    assert_eq!(expressions.len(), 1);
+    let expression = expressions.get(0).unwrap();
+    assert!(expression.eq(&JSItem::Ex {
+        expression: Box::new(Expression::Binop {
+            a: Box::new(Expression::Binop {
+                a: Box::new(Expression::Number {value: 1.}),
+                op: Operator::Add,
+                b: Box::new(Expression::Number {value: 2.})
+            }),
+            op: Operator::Add,
+            b: Box::new(Expression::Number {value: 3.})
+        })
+    }));
 }
 
 #[test]
@@ -25,7 +37,15 @@ fn test_div1() {
     let tokens = lex.lex(file.unwrap());
     let expressions = parser.parse(tokens);
 
-    println!("hi")
+    assert_eq!(expressions.len(), 1);
+    let expression = expressions.get(0).unwrap();
+    assert!(expression.eq(&JSItem::Ex {
+        expression: Box::new(Expression::Binop {
+            a: Box::new(Expression::Number {value: 1.}),
+            op: Operator::Div,
+            b: Box::new(Expression::Number {value: 5.})
+        })
+    }));
 }
 
 #[test]

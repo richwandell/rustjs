@@ -2,9 +2,7 @@ use crate::lexer::lexer::Lexer;
 
 use crate::lexer::js_token::Tok;
 use crate::parser::symbols::{Operator, Expression, Statement, JSItem};
-use std::ops::Deref;
-use std::borrow::Borrow;
-use crate::parser::symbols::Expression::{CallExpression, Identifier};
+use crate::parser::symbols::Expression::{Identifier};
 
 pub struct Parser {
     pub(crate) lexer: Lexer,
@@ -21,7 +19,7 @@ impl Parser {
 
             if current_type == "assignment" {
                 match token {
-                    Tok::Name { name } => {
+                    Tok::Name { name: _ } => {
                         j += 1;
                         current_type = "name";
                     }
@@ -29,7 +27,7 @@ impl Parser {
                         return j;
                     }
                 }
-            } else if (current_type == "name") {
+            } else if current_type == "name" {
                 match token {
                     Tok::Equal => {
                         j += 1;
@@ -39,9 +37,9 @@ impl Parser {
                         return j;
                     }
                 }
-            } else if (current_type == "equal") {
+            } else if current_type == "equal" {
                 match token {
-                    Tok::Name { name } => {
+                    Tok::Name { name: _ } => {
                         let k = Parser::find_end_of_expression(j, tokens, "name");
                         j = k + 1;
                         current_type = "expression"
@@ -50,7 +48,7 @@ impl Parser {
                         return j;
                     }
                 }
-            } else if (current_type == "expression") {
+            } else if current_type == "expression" {
                 match token {
                     Tok::Lpar => {
                         let k = Parser::find_matching_paren(j, tokens);
@@ -170,11 +168,11 @@ impl Parser {
                 }
             } else if prev_type == "bslash" {
                 match token {
-                    Tok::Name {name} => {
+                    Tok::Name { name: _ } => {
                         prev_type = "name";
                         j += 1;
                     }
-                    Tok::Float {value: _} => {
+                    Tok::Float { value: _ } => {
                         prev_type = "float";
                         j += 1;
                     }
@@ -224,7 +222,7 @@ impl Parser {
                 }
             } else if prev_type == "dot" {
                 match token {
-                    Tok::Name { name } => {
+                    Tok::Name { name: _ } => {
                         prev_type = "name";
                         j += 1;
                     }
@@ -328,7 +326,7 @@ impl Parser {
         while i < tokens.len() - 1 {
             let token = tokens.get(i).unwrap();
             match token {
-                Tok::Float { value } => {
+                Tok::Float { value: _ } => {
                     let j = Parser::find_end_of_expression(i, &tokens, "float");
                     let t = tokens[i..=j].to_vec();
                     let ex = self.create_expression(t);
@@ -338,15 +336,15 @@ impl Parser {
                 Tok::Let => {
                     //assignment
                     let j = Parser::find_end_of_assignment(i, &tokens);
-                    let t = tokens[i + 3..=j].to_vec();
-                    let mut p = Parser::new();
-                    let out = p.parse(t);
+                    // let t = tokens[i + 3..=j].to_vec();
+                    // let mut p = Parser::new();
+                    // let out = p.parse(t);
                     i = j;
                 }
-                Tok::Name { name } => {
+                Tok::Name { name: _ } => {
                     //expression
                     let j = Parser::find_end_of_expression(i, &tokens, "name");
-                    let mut t = tokens[i..=j].to_vec();
+                    let t = tokens[i..=j].to_vec();
                     let ex = self.create_expression(t);
                     js_items.push(ex);
                     i = j;
@@ -365,7 +363,7 @@ impl Parser {
                 Tok::Function => {
                     //function
                     let j = Parser::find_end_of_function(i + 1, &tokens);
-                    let mut t = tokens[i..=j].to_vec();
+                    let t = tokens[i..=j].to_vec();
                     let func = self.create_function(t);
                     js_items.push(func);
                     i = j;
@@ -630,8 +628,8 @@ impl Parser {
                 return Expression::Binop {
                     a: Box::new(Expression::None),
                     op: Operator::Add,
-                    b: Box::new(Expression::SubExpression {expression})
-                }
+                    b: Box::new(Expression::SubExpression { expression }),
+                };
             }
             _ => {}
         }
@@ -662,7 +660,7 @@ impl Parser {
 
     fn combine_expression(last_exp: Expression, next_expression: Expression) -> Expression {
         match last_exp {
-            Expression::Binop { a, op, b } => {
+            Expression::Binop { a: _, op, b } => {
                 return Expression::Binop {
                     a: Box::new(Expression::SubExpression {
                         expression: Box::from(next_expression)
@@ -677,7 +675,6 @@ impl Parser {
     }
 
     fn create_expression(&mut self, mut tokens: Vec<Tok>) -> JSItem {
-        let mut in_parens = false;
         let mut parens_content = vec![];
         let mut expression_stack = vec![];
         while tokens.len() > 0 {
@@ -711,68 +708,64 @@ impl Parser {
                 Tok::Semi | Tok::EndOfLine => {}
                 Tok::Comma => {}
                 Tok::Rpar => {
-                    if !in_parens {
-                        let mut parens_content = vec![];
-                        let mut parens_stack = vec![];
-                        parens_stack.push(")");
-                        while tokens.len() > 0 {
-                            let token = tokens.pop().unwrap();
-                            match token {
-                                Tok::Rpar => {
-                                    parens_stack.push(")")
+                    let mut parens_content = vec![];
+                    let mut parens_stack = vec![];
+                    parens_stack.push(")");
+                    while tokens.len() > 0 {
+                        let token = tokens.pop().unwrap();
+                        match token {
+                            Tok::Rpar => {
+                                parens_stack.push(")")
+                            }
+                            Tok::Lpar => {
+                                parens_stack.pop();
+                                if parens_stack.is_empty() {
+                                    break;
                                 }
-                                Tok::Lpar => {
-                                    parens_stack.pop();
-                                    if parens_stack.is_empty() {
-                                        break;
+                            }
+                            _ => {
+                                parens_content.push(token);
+                            }
+                        }
+                    }
+
+                    parens_content.reverse();
+
+                    let ex = expression_stack.pop().unwrap_or(Expression::None);
+
+                    if !tokens.is_empty() {
+                        let next = tokens.pop().unwrap();
+                        match next {
+                            Tok::Name { name } => {
+                                tokens.push(Tok::Name { name });
+                                let exp = Parser::combine_call(ex, parens_content.clone());
+                                expression_stack.push(exp);
+                            }
+                            _ => {
+                                tokens.push(next);
+                                let item = self.create_expression(parens_content);
+                                match item {
+                                    JSItem::Ex { expression } => {
+                                        let exp = Parser::combine_expression(ex, *expression);
+                                        expression_stack.push(exp);
                                     }
-                                }
-                                _ => {
-                                    parens_content.push(token);
+                                    JSItem::St { statement: _ } => {}
                                 }
                             }
                         }
-
-                        parens_content.reverse();
-
-                        let ex = expression_stack.pop().unwrap_or(Expression::None);
-
-                        if !tokens.is_empty() {
-                            let next = tokens.pop().unwrap();
-                            match next {
-                                Tok::Name { name } => {
-                                    tokens.push(Tok::Name { name });
-                                    let exp = Parser::combine_call(ex, parens_content.clone());
-                                    expression_stack.push(exp);
-                                }
-                                _ => {
-                                    tokens.push(next);
-                                    let item = self.create_expression(parens_content);
-                                    match item {
-                                        JSItem::Ex { expression } => {
-                                            let exp = Parser::combine_expression(ex, *expression);
-                                            expression_stack.push(exp);
-                                        }
-                                        JSItem::St { statement: _ } => {}
-                                    }
-                                }
+                    } else {
+                        let item = self.create_expression(parens_content);
+                        match item {
+                            JSItem::Ex { expression } => {
+                                let exp = Parser::combine_expression(ex, *expression);
+                                expression_stack.push(exp);
                             }
-                        } else {
-                            let item = self.create_expression(parens_content);
-                            match item {
-                                JSItem::Ex { expression } => {
-                                    let exp = Parser::combine_expression(ex, *expression);
-                                    expression_stack.push(exp);
-                                }
-                                JSItem::St { statement: _ } => {}
-                            }
+                            JSItem::St { statement: _ } => {}
                         }
                     }
                 }
                 _ => {
-                    if in_parens {
-                        parens_content.push(token);
-                    }
+                    parens_content.push(token);
                 }
             }
         }
