@@ -9,9 +9,8 @@ fn test_one_liner() {
     let mut lex = Lexer::new();
     let tokens = lex.lex(file.unwrap());
 
-    assert_eq!(tokens.len(), 19);
+    assert_eq!(tokens.len(), 18);
     let expected = vec![
-        Tok::StartProgram,
         Tok::Name { name: String::from("tips") },
         Tok::Dot,
         Tok::Name { name: String::from("forEach") },

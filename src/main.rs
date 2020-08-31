@@ -1,6 +1,5 @@
-mod ast;
 mod lexer;
-mod tests;
+mod parser;
 
 use std::{env, fs};
 use std::str::Chars;

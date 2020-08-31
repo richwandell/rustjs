@@ -10,10 +10,8 @@ fn test_plus() {
     let mut lex = Lexer::new();
     let tokens = lex.lex(file.unwrap());
 
-    assert_eq!(tokens.len(), 30);
+    assert_eq!(tokens.len(), 28);
     let expected = vec![
-        Tok::StartProgram,
-        Tok::StartStatement,
         Tok::Let,
         Tok::Name { name: String::from("a") },
         Tok::Equal,
@@ -53,10 +51,8 @@ fn test_minus() {
     let mut lex = Lexer::new();
     let tokens = lex.lex(file.unwrap());
 
-    assert_eq!(tokens.len(), 30);
+    assert_eq!(tokens.len(), 28);
     let expected = vec![
-        Tok::StartProgram,
-        Tok::StartStatement,
         Tok::Let,
         Tok::Name { name: String::from("a") },
         Tok::Equal,
@@ -96,10 +92,8 @@ fn test_mul() {
     let mut lex = Lexer::new();
     let tokens = lex.lex(file.unwrap());
 
-    assert_eq!(tokens.len(), 30);
+    assert_eq!(tokens.len(), 28);
     let expected = vec![
-        Tok::StartProgram,
-        Tok::StartStatement,
         Tok::Let,
         Tok::Name { name: String::from("a") },
         Tok::Equal,
@@ -139,10 +133,8 @@ fn test_number_plus_return_value() {
     let mut lex = Lexer::new();
     let tokens = lex.lex(file.unwrap());
 
-    assert_eq!(tokens.len(), 33);
+    assert_eq!(tokens.len(), 31);
     let expected = vec![
-        Tok::StartProgram,
-        Tok::StartStatement,
         Tok::Let,
         Tok::Name { name: String::from("a") },
         Tok::Equal,
@@ -185,10 +177,8 @@ fn test_bitwise() {
     let mut lex = Lexer::new();
     let tokens = lex.lex(file.unwrap());
 
-    assert_eq!(tokens.len(), 33);
+    assert_eq!(tokens.len(), 30);
     let expected = vec![
-        Tok::StartProgram,
-        Tok::StartStatement,
         Tok::Let,
         Tok::Name { name: String::from("x") },
         Tok::Equal,
@@ -197,7 +187,6 @@ fn test_bitwise() {
         Tok::Float { value: 10.0 },
         Tok::Semi,
         Tok::EndOfLine,
-        Tok::StartStatement,
         Tok::Let,
         Tok::Name { name: String::from("y") },
         Tok::Equal,

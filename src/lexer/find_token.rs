@@ -108,7 +108,7 @@ fn find_let(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
         }
     }
     word = word.trim().parse().unwrap();
-    return Ok(vec![Tok::StartStatement, Tok::Let, Tok::Name { name: word }]);
+    return Ok(vec![Tok::Let, Tok::Name { name: word }]);
 }
 
 fn find_const(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
@@ -131,7 +131,7 @@ fn find_const(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
         }
     }
     word = word.trim().parse().unwrap();
-    return Ok(vec![Tok::StartStatement, Tok::Const, Tok::Name { name: word }]);
+    return Ok(vec![Tok::Const, Tok::Name { name: word }]);
 }
 
 fn find_gt_lt(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {

@@ -30,12 +30,16 @@ pub enum Expression {
     MemberExpression {
         object: Box<Expression>,
         property: Box<Expression>
+    },
+    SubExpression {
+       expression: Box<Expression>
     }
 }
 
 /// An operator for a binary operation (an operation with two operands).
 #[derive(Debug, PartialEq)]
 pub enum Operator {
+    None, // temporary none
     Add, // +
     Sub, // -
     Mult, // *

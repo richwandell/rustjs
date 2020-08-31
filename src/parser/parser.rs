@@ -1,85 +1,14 @@
 use crate::lexer::lexer::Lexer;
 
 use crate::lexer::js_token::Tok;
-use crate::ast::ast::{Operator, Expression, Statement, JSItem};
+use crate::parser::symbols::{Operator, Expression, Statement, JSItem};
 use std::ops::Deref;
 use std::borrow::Borrow;
-use crate::ast::ast::Expression::{CallExpression, Identifier};
+use crate::parser::symbols::Expression::{CallExpression, Identifier};
 
 pub struct Parser {
     pub(crate) lexer: Lexer,
     pub ast_tree: Vec<Expression>,
-}
-
-fn create_expression(last: Expression, tok: Tok) -> Expression {
-    match tok {
-        Tok::Float { value } => {
-            match last {
-                Expression::Binop { a, op, b } => {
-                    let last = *b;
-                    let next = create_expression(last, tok);
-                    return Expression::Binop { a, op, b: Box::new(next) };
-                }
-                _ => {
-                    return Expression::Number { value };
-                }
-            }
-        }
-        Tok::Plus => {
-            return Expression::Binop {
-                a: Box::new(last),
-                op: Operator::Add,
-                b: Box::new(Expression::None),
-            };
-        }
-        Tok::Star => {
-            match last {
-                Expression::Binop { a, op, b } => {
-                    return Expression::Binop {
-                        a,
-                        op,
-                        b: Box::from(Expression::Binop {
-                            a: b,
-                            op: Operator::Mult,
-                            b: Box::new(Expression::None),
-                        }),
-                    };
-                }
-                _ => {
-                    return Expression::Binop {
-                        a: Box::new(last),
-                        op: Operator::Mult,
-                        b: Box::new(Expression::None),
-                    };
-                }
-            }
-        }
-        Tok::Bslash => {
-            match last {
-                Expression::Binop { a, op, b } => {
-                    return Expression::Binop {
-                        a,
-                        op,
-                        b: Box::from(Expression::Binop {
-                            a: b,
-                            op: Operator::Div,
-                            b: Box::new(Expression::None),
-                        }),
-                    };
-                }
-                _ => {
-                    return Expression::Binop {
-                        a: Box::new(last),
-                        op: Operator::Div,
-                        b: Box::new(Expression::None),
-                    };
-                }
-            }
-        }
-        _ => {
-            return Expression::None;
-        }
-    }
 }
 
 impl Parser {
@@ -113,7 +42,7 @@ impl Parser {
             } else if (current_type == "equal") {
                 match token {
                     Tok::Name { name } => {
-                        let k = Parser::find_end_of_expression(j, tokens);
+                        let k = Parser::find_end_of_expression(j, tokens, "name");
                         j = k + 1;
                         current_type = "expression"
                     }
@@ -139,13 +68,139 @@ impl Parser {
         return j;
     }
 
-    fn find_end_of_expression(start: usize, tokens: &Vec<Tok>) -> usize {
+    fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type: &str) -> usize {
         let mut j = start + 1;
 
-        let mut prev_type = "name";
+        let mut prev_type = start_type;
         while j < tokens.len() - 1 {
             let token = tokens.get(j as usize).unwrap();
-            if prev_type == "name" {
+            if prev_type == "float" {
+                match token {
+                    Tok::Minus => {
+                        prev_type = "minus";
+                        j += 1;
+                    }
+                    Tok::MinusEqual => {
+                        prev_type = "minus_equal";
+                        j += 1;
+                    }
+                    Tok::Plus => {
+                        prev_type = "plus";
+                        j += 1;
+                    }
+                    Tok::PlusEqual => {
+                        prev_type = "plus_equal";
+                        j += 1;
+                    }
+                    Tok::Bslash => {
+                        prev_type = "bslash";
+                        j += 1;
+                    }
+                    Tok::BslashEqual => {
+                        prev_type = "bslash_equal";
+                        j += 1;
+                    }
+                    Tok::Star => {
+                        prev_type = "star";
+                        j += 1;
+                    }
+                    Tok::StarEqual => {
+                        prev_type = "star_equal";
+                        j += 1;
+                    }
+                    Tok::Less => {
+                        prev_type = "less";
+                        j += 1;
+                    }
+                    Tok::LessEqual => {
+                        prev_type = "less_equal";
+                        j += 1;
+                    }
+                    Tok::Greater => {
+                        prev_type = "greater";
+                        j += 1;
+                    }
+                    Tok::GreaterEqual => {
+                        prev_type = "greater_equal";
+                        j += 1;
+                    }
+                    Tok::LeftShift => {
+                        prev_type = "left_shift";
+                        j += 1;
+                    }
+                    Tok::LeftShiftEqual => {
+                        prev_type = "left_shift_equal";
+                        j += 1;
+                    }
+                    Tok::RightShift => {
+                        prev_type = "right_shift";
+                        j += 1;
+                    }
+                    Tok::RightShiftEqual => {
+                        prev_type = "right_shift_equal";
+                        j += 1;
+                    }
+                    Tok::RightShiftUnsigned => {
+                        prev_type = "right_shift_unsigned";
+                        j += 1;
+                    }
+                    Tok::RightShiftUnsignedEqual => {
+                        prev_type = "right_shift_unsigned_equal";
+                        j += 1;
+                    }
+                    Tok::Rpar => {
+                        prev_type = "rpar";
+                        j += 1;
+                    }
+                    Tok::Rsqb => {
+                        prev_type = "rsqb";
+                        j += 1;
+                    }
+                    Tok::Comma => {
+                        prev_type = "comma";
+                        j += 1;
+                    }
+                    Tok::Rbrace => {
+                        prev_type = "rbrace";
+                        j += 1;
+                    }
+                    _ => {
+                        return j;
+                    }
+                }
+            } else if prev_type == "bslash" {
+                match token {
+                    Tok::Name {name} => {
+                        prev_type = "name";
+                        j += 1;
+                    }
+                    Tok::Float {value: _} => {
+                        prev_type = "float";
+                        j += 1;
+                    }
+                    _ => {
+                        return j;
+                    }
+                }
+            } else if prev_type == "plus" {
+                match token {
+                    Tok::Float { value: _ } => {
+                        prev_type = "float";
+                        j += 1;
+                    }
+                    Tok::Name { name: _ } => {
+                        prev_type = "name";
+                        j += 1;
+                    }
+                    Tok::Lpar => {
+                        prev_type = "lpar";
+                        j += 1;
+                    }
+                    _ => {
+                        return j;
+                    }
+                }
+            } else if prev_type == "name" {
                 match token {
                     Tok::Lpar => {
                         prev_type = "lpar";
@@ -197,6 +252,14 @@ impl Parser {
                     }
                     Tok::Semi => {
                         return j;
+                    }
+                    Tok::Plus => {
+                        prev_type = "plus";
+                        j += 1;
+                    }
+                    Tok::Bslash => {
+                        prev_type = "bslash";
+                        j += 1;
                     }
                     _ => {
                         return j;
@@ -265,6 +328,13 @@ impl Parser {
         while i < tokens.len() - 1 {
             let token = tokens.get(i).unwrap();
             match token {
+                Tok::Float { value } => {
+                    let j = Parser::find_end_of_expression(i, &tokens, "float");
+                    let t = tokens[i..=j].to_vec();
+                    let ex = self.create_expression(t);
+                    js_items.push(ex);
+                    i = j;
+                }
                 Tok::Let => {
                     //assignment
                     let j = Parser::find_end_of_assignment(i, &tokens);
@@ -275,7 +345,7 @@ impl Parser {
                 }
                 Tok::Name { name } => {
                     //expression
-                    let j = Parser::find_end_of_expression(i, &tokens);
+                    let j = Parser::find_end_of_expression(i, &tokens, "name");
                     let mut t = tokens[i..=j].to_vec();
                     let ex = self.create_expression(t);
                     js_items.push(ex);
@@ -328,9 +398,9 @@ impl Parser {
                         return Expression::CallExpression {
                             callee: Box::new(Expression::MemberExpression {
                                 object: Box::from(new_object),
-                                property
+                                property,
                             }),
-                            arguments
+                            arguments,
                         };
                     }
                     _ => {}
@@ -338,21 +408,19 @@ impl Parser {
             }
             Expression::MemberExpression { object, property } => {
                 match *object {
-                    Expression::Identifier {name} => {
-                        let new_object = Parser::combine_dot(Expression::Identifier {name}, tok);
+                    Expression::Identifier { name } => {
+                        let new_object = Parser::combine_dot(Expression::Identifier { name }, tok);
                         return Expression::MemberExpression {
                             object: Box::from(new_object),
-                            property
-                        }
+                            property,
+                        };
                     }
-                    Expression::None => {
-
-                    }
-                    Expression::MemberExpression {object, property} => {
+                    Expression::None => {}
+                    Expression::MemberExpression { object, property } => {
                         let new_object = Parser::combine_dot(*object, tok);
                         let new_expression = Expression::MemberExpression {
                             object: Box::new(new_object),
-                            property
+                            property,
                         };
                         return new_expression;
                     }
@@ -362,8 +430,8 @@ impl Parser {
             Expression::Identifier { name } => {
                 return Expression::MemberExpression {
                     object: Box::new(Expression::None),
-                    property: Box::new(Identifier {name})
-                }
+                    property: Box::new(Identifier { name }),
+                };
             }
             _ => {}
         }
@@ -377,7 +445,7 @@ impl Parser {
                     Expression::None => {
                         return Expression::CallExpression {
                             callee: Box::new(Expression::Identifier { name }),
-                            arguments
+                            arguments,
                         };
                     }
                     Expression::MemberExpression { object, property } => {
@@ -386,9 +454,9 @@ impl Parser {
                         return Expression::CallExpression {
                             callee: Box::new(Expression::MemberExpression {
                                 object: Box::from(new_object),
-                                property
+                                property,
                             }),
-                            arguments
+                            arguments,
                         };
                     }
                     _ => {}
@@ -397,11 +465,11 @@ impl Parser {
             Expression::Identifier { name } => {
                 return Expression::MemberExpression {
                     object: Box::new(Expression::None),
-                    property: Box::new(Identifier {name})
-                }
+                    property: Box::new(Identifier { name }),
+                };
             }
             Expression::None => {
-                return Expression::Identifier {name};
+                return Expression::Identifier { name };
             }
             Expression::MemberExpression { object, property } => {
                 let outer_property = property;
@@ -409,16 +477,16 @@ impl Parser {
                     Expression::None => {
                         return Expression::MemberExpression {
                             object: Box::from(Parser::combine_name(Expression::None, name)),
-                            property: outer_property
-                        }
+                            property: outer_property,
+                        };
                     }
-                    Expression::MemberExpression {object, property} => {
+                    Expression::MemberExpression { object, property } => {
                         return Expression::MemberExpression {
                             object: Box::from(Expression::MemberExpression {
                                 object: Box::new(Parser::combine_name(*object, name)),
-                                property
+                                property,
                             }),
-                            property: outer_property
+                            property: outer_property,
                         };
                     }
                     _ => {}
@@ -434,7 +502,7 @@ impl Parser {
             Expression::None => {
                 return Expression::CallExpression {
                     callee: Box::new(Expression::None),
-                    arguments: params
+                    arguments: params,
                 };
             }
             Expression::CallExpression { callee, arguments } => {
@@ -443,9 +511,9 @@ impl Parser {
                         return Expression::CallExpression {
                             callee: Box::new(Expression::CallExpression {
                                 callee: Box::new(Expression::None),
-                                arguments: params
+                                arguments: params,
                             }),
-                            arguments
+                            arguments,
                         };
                     }
                     Expression::MemberExpression { object, property } => {
@@ -454,9 +522,9 @@ impl Parser {
                         return Expression::CallExpression {
                             callee: Box::new(Expression::MemberExpression {
                                 object: Box::from(new_object),
-                                property
+                                property,
                             }),
-                            arguments
+                            arguments,
                         };
                     }
                     _ => {}
@@ -465,8 +533,8 @@ impl Parser {
             Expression::Identifier { name } => {
                 return Expression::MemberExpression {
                     object: Box::new(Expression::None),
-                    property: Box::new(Identifier {name})
-                }
+                    property: Box::new(Identifier { name }),
+                };
             }
             Expression::MemberExpression { object, property } => {
                 let outer_property = property;
@@ -474,16 +542,16 @@ impl Parser {
                     Expression::None => {
                         return Expression::MemberExpression {
                             object: Box::from(Parser::combine_call(Expression::None, params)),
-                            property: outer_property
-                        }
+                            property: outer_property,
+                        };
                     }
-                    Expression::MemberExpression {object, property} => {
+                    Expression::MemberExpression { object, property } => {
                         return Expression::MemberExpression {
                             object: Box::from(Expression::MemberExpression {
                                 object: Box::new(Parser::combine_call(*object, params)),
-                                property
+                                property,
                             }),
-                            property: outer_property
+                            property: outer_property,
                         };
                     }
                     _ => {}
@@ -494,65 +562,216 @@ impl Parser {
         return Expression::None;
     }
 
+    fn combine_float(last_exp: Expression, f_value: f64) -> Expression {
+        match last_exp {
+            Expression::Binop { a, op, b } => {
+                match op {
+                    Operator::Add => {
+                        let new_a = Parser::combine_float(*a, f_value);
+                        return Expression::Binop {
+                            a: Box::from(new_a),
+                            op,
+                            b,
+                        };
+                    }
+                    Operator::Div => {
+                        let new_a = Parser::combine_float(*a, f_value);
+                        return Expression::Binop {
+                            a: Box::from(new_a),
+                            op,
+                            b,
+                        };
+                    }
+                    _ => {}
+                }
+            }
+            Expression::None => {
+                return Expression::Number { value: f_value };
+            }
+            _ => {}
+        }
+        return Expression::None;
+    }
+
+    fn combine_plus(last_exp: Expression) -> Expression {
+        match last_exp {
+            Expression::Number { value } => {
+                return Expression::Binop {
+                    a: Box::new(Expression::None),
+                    op: Operator::Add,
+                    b: Box::new(Expression::Number { value }),
+                };
+            }
+            Expression::Binop { a, op, b } => {
+                match op {
+                    Operator::Add => {
+                        let new_exp = Parser::combine_plus(*a);
+                        return Expression::Binop {
+                            a: Box::from(new_exp),
+                            op,
+                            b,
+                        };
+                    }
+                    Operator::Div => {
+                        return Expression::Binop {
+                            a: Box::from(Expression::None),
+                            op: Operator::Add,
+                            b: Box::from(Expression::Binop {
+                                a,
+                                op,
+                                b,
+                            }),
+                        };
+                    }
+                    _ => {}
+                }
+            }
+            Expression::SubExpression { expression } => {
+                return Expression::Binop {
+                    a: Box::new(Expression::None),
+                    op: Operator::Add,
+                    b: Box::new(Expression::SubExpression {expression})
+                }
+            }
+            _ => {}
+        }
+        return Expression::None;
+    }
+
+    fn combine_bslash(last_exp: Expression) -> Expression {
+        match last_exp {
+            Expression::Number { value } => {
+                return Expression::Binop {
+                    a: Box::new(Expression::None),
+                    op: Operator::Div,
+                    b: Box::new(Expression::Number { value }),
+                };
+            }
+            Expression::Binop { a, op, b } => {
+                let new_exp = Parser::combine_bslash(*a);
+                return Expression::Binop {
+                    a: Box::from(new_exp),
+                    op,
+                    b,
+                };
+            }
+            _ => {}
+        }
+        return Expression::None;
+    }
+
+    fn combine_expression(last_exp: Expression, next_expression: Expression) -> Expression {
+        match last_exp {
+            Expression::Binop { a, op, b } => {
+                return Expression::Binop {
+                    a: Box::new(Expression::SubExpression {
+                        expression: Box::from(next_expression)
+                    }),
+                    op,
+                    b,
+                };
+            }
+            _ => {}
+        }
+        return Expression::None;
+    }
+
     fn create_expression(&mut self, mut tokens: Vec<Tok>) -> JSItem {
-        //find out if we have a call expression
-        let mut call_expression_params_stack = vec![];
-        let mut in_call_expression_params = false;
-        let mut call_expression_params = vec![];
+        let mut in_parens = false;
+        let mut parens_content = vec![];
         let mut expression_stack = vec![];
         while tokens.len() > 0 {
             let token = tokens.pop().unwrap();
             match token {
+                Tok::Bslash => {
+                    let ex = expression_stack.pop().unwrap();
+                    let exp = Parser::combine_bslash(ex);
+                    expression_stack.push(exp);
+                }
+                Tok::Plus => {
+                    let ex = expression_stack.pop().unwrap_or(Expression::None);
+                    let exp = Parser::combine_plus(ex);
+                    expression_stack.push(exp);
+                }
+                Tok::Float { value } => {
+                    let ex = expression_stack.pop().unwrap_or(Expression::None);
+                    let exp = Parser::combine_float(ex, value);
+                    expression_stack.push(exp);
+                }
                 Tok::Dot => {
                     let ex = expression_stack.pop().unwrap();
                     let exp = Parser::combine_dot(ex, token);
                     expression_stack.push(exp);
                 }
                 Tok::Name { name } => {
-                    if in_call_expression_params {
-                        call_expression_params.push(Tok::Name { name });
-                    } else {
-                        let ex = expression_stack.pop().unwrap();
-                        let exp = Parser::combine_name(ex, name);
-                        expression_stack.push(exp);
-                    }
+                    let ex = expression_stack.pop().unwrap_or(Expression::None);
+                    let exp = Parser::combine_name(ex, name);
+                    expression_stack.push(exp);
                 }
                 Tok::Semi | Tok::EndOfLine => {}
                 Tok::Comma => {}
                 Tok::Rpar => {
-                    if !in_call_expression_params {
-                        call_expression_params_stack.push(")");
-                        in_call_expression_params = true;
-                    }
-                }
-                Tok::Lpar => {
-                    if in_call_expression_params {
-                        call_expression_params_stack.pop();
-                        if call_expression_params_stack.is_empty() {
-                            if expression_stack.len() > 0 {
-                                let ex = expression_stack.pop().unwrap();
-                                call_expression_params.reverse();
-                                let exp = Parser::combine_call(ex, call_expression_params.clone());
-                                expression_stack.push(exp);
-                            } else {
-                                call_expression_params.reverse();
-                                expression_stack.push(Expression::CallExpression {
-                                    callee: Box::new(Expression::None),
-                                    arguments: call_expression_params.clone(),
-                                });
+                    if !in_parens {
+                        let mut parens_content = vec![];
+                        let mut parens_stack = vec![];
+                        parens_stack.push(")");
+                        while tokens.len() > 0 {
+                            let token = tokens.pop().unwrap();
+                            match token {
+                                Tok::Rpar => {
+                                    parens_stack.push(")")
+                                }
+                                Tok::Lpar => {
+                                    parens_stack.pop();
+                                    if parens_stack.is_empty() {
+                                        break;
+                                    }
+                                }
+                                _ => {
+                                    parens_content.push(token);
+                                }
                             }
-                            call_expression_params.clear();
-                            in_call_expression_params = false;
+                        }
+
+                        parens_content.reverse();
+
+                        let ex = expression_stack.pop().unwrap_or(Expression::None);
+
+                        if !tokens.is_empty() {
+                            let next = tokens.pop().unwrap();
+                            match next {
+                                Tok::Name { name } => {
+                                    tokens.push(Tok::Name { name });
+                                    let exp = Parser::combine_call(ex, parens_content.clone());
+                                    expression_stack.push(exp);
+                                }
+                                _ => {
+                                    tokens.push(next);
+                                    let item = self.create_expression(parens_content);
+                                    match item {
+                                        JSItem::Ex { expression } => {
+                                            let exp = Parser::combine_expression(ex, *expression);
+                                            expression_stack.push(exp);
+                                        }
+                                        JSItem::St { statement: _ } => {}
+                                    }
+                                }
+                            }
                         } else {
-                            call_expression_params.push(token);
+                            let item = self.create_expression(parens_content);
+                            match item {
+                                JSItem::Ex { expression } => {
+                                    let exp = Parser::combine_expression(ex, *expression);
+                                    expression_stack.push(exp);
+                                }
+                                JSItem::St { statement: _ } => {}
+                            }
                         }
                     }
-                    //TODO: do something with other tokens
-                    else {}
                 }
                 _ => {
-                    if in_call_expression_params {
-                        call_expression_params.push(token);
+                    if in_parens {
+                        parens_content.push(token);
                     }
                 }
             }
@@ -648,7 +867,7 @@ impl Parser {
     pub fn new() -> Parser {
         Parser {
             lexer: Lexer::new(),
-            ast_tree: vec![]
+            ast_tree: vec![],
         }
     }
 

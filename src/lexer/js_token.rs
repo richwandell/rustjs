@@ -68,6 +68,7 @@ pub enum Tok {
     Star, // *
     Slash, // \
     Bslash, // /
+    BslashEqual, // /=
     Vbar,  // '|'
     Amper, // '&'
     Less, // <
