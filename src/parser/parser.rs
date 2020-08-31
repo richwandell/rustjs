@@ -166,6 +166,25 @@ impl Parser {
                         return j;
                     }
                 }
+            } else if prev_type == "star" {
+                match token {
+                    Tok::Float {value: _} => {
+                        prev_type = "float";
+                        j += 1;
+                    }
+                    Tok::Name { name: _ } => {
+                        prev_type = "name";
+                        j += 1;
+                    }
+                    Tok::Lpar => {
+                        let k = Parser::find_matching_paren(j - 1, tokens);
+                        j = k + 1;
+                        prev_type = "rpar";
+                    }
+                    _ => {
+                        return j;
+                    }
+                }
             } else if prev_type == "bslash" {
                 match token {
                     Tok::Name { name: _ } => {
@@ -238,7 +257,7 @@ impl Parser {
                 match token {
                     Tok::Lpar => {
                         let k = Parser::find_matching_paren(j - 1, tokens);
-                        j = k;
+                        j = k + 1;
                         prev_type = "rpar";
                     }
                     Tok::EndOfLine => {
@@ -572,7 +591,7 @@ impl Parser {
                             b,
                         };
                     }
-                    Operator::Div => {
+                    Operator::Div | Operator::Mult => {
                         let new_a = Parser::combine_float(*a, f_value);
                         return Expression::Binop {
                             a: Box::from(new_a),
@@ -658,6 +677,28 @@ impl Parser {
         return Expression::None;
     }
 
+    fn combine_star(last_exp: Expression) -> Expression {
+        match last_exp {
+            Expression::Number { value } => {
+                return Expression::Binop {
+                    a: Box::new(Expression::None),
+                    op: Operator::Mult,
+                    b: Box::new(Expression::Number { value }),
+                };
+            }
+            Expression::Binop { a, op, b } => {
+                let new_exp = Parser::combine_star(*a);
+                return Expression::Binop {
+                    a: Box::from(new_exp),
+                    op,
+                    b,
+                };
+            }
+            _ => {}
+        }
+        return Expression::None;
+    }
+
     fn combine_expression(last_exp: Expression, next_expression: Expression) -> Expression {
         match last_exp {
             Expression::Binop { a: _, op, b } => {
@@ -680,6 +721,11 @@ impl Parser {
         while tokens.len() > 0 {
             let token = tokens.pop().unwrap();
             match token {
+                Tok::Star => {
+                    let ex = expression_stack.pop().unwrap();
+                    let exp = Parser::combine_star(ex);
+                    expression_stack.push(exp);
+                }
                 Tok::Bslash => {
                     let ex = expression_stack.pop().unwrap();
                     let exp = Parser::combine_bslash(ex);
