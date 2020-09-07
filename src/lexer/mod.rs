@@ -1,5 +1,5 @@
-pub mod js_token;
-pub mod string_iterator;
-pub mod lexer;
-pub mod find_token;
+pub(crate) mod js_token;
+pub(crate) mod string_iterator;
+pub(crate) mod lexer;
+pub(crate) mod find_token;
 mod tests;

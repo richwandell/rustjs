@@ -1,7 +1,10 @@
 use crate::lexer::js_token::Tok;
+use std::collections::HashMap;
+use std::fmt::{Display, Formatter, Result};
 
-#[derive(Debug, PartialEq)]
-pub enum Expression {
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum Expression {
     Binop {
         a: Box<Expression>,
         op: Operator,
@@ -20,6 +23,7 @@ pub enum Expression {
     Literal {
         value: String
     },
+    Null,
     None,
     True, // The literal 'True'.
     False, // The literal 'False'.
@@ -37,8 +41,9 @@ pub enum Expression {
 }
 
 /// An operator for a binary operation (an operation with two operands).
-#[derive(Debug, PartialEq)]
-pub enum Operator {
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum Operator {
     None, // temporary none
     Add, // +
     Sub, // -
@@ -53,8 +58,9 @@ pub enum Operator {
     FloorDiv,
 }
 
-#[derive(Debug, PartialEq)]
-pub enum Statement {
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum Statement {
     //temporary non filled in statement
     None,
 
@@ -64,9 +70,9 @@ pub enum Statement {
 
     Return { value: Option<Expression> },
 
-    /// Variable assignment. Note that we can assign to multiple targets.
-    Assign {
-        targets: Box<Expression>,
+    AssignExpression {
+        mutable: bool,
+        name: String,
         value: Box<Expression>,
     },
 
@@ -89,16 +95,85 @@ pub enum Statement {
         name: String,
         params: Vec<Tok>,
         body: Vec<JSItem>
+    },
+
+    AssignArrowFunction {
+        mutable: bool,
+        function: Box<Statement>
+    },
+
+    AssignFunction {
+        mutable: bool,
+        function: Box<Statement>
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum JSItem {
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum StdFun {
+    Log
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum JSItem {
+    Number {
+        value: f64
+    },
+
+    String {
+        value: String
+    },
+
+    Std {
+        params: Vec<Tok>,
+        func: StdFun
+    },
+
     Ex {
         expression: Box<Expression>
     },
 
     St {
         statement: Box<Statement>
+    },
+
+    Object {
+        mutable: bool,
+        properties: HashMap<String, JSItem>
+    },
+
+    Variable {
+        mutable: bool,
+        value: Expression
+    },
+
+    Function {
+        mutable: bool,
+        params: Vec<Tok>,
+        properties: HashMap<String, JSItem>,
+        body: Vec<JSItem>
+    }
+}
+
+impl Display for JSItem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        match self {
+            JSItem::Std { params, func } => {
+                match func {
+                    StdFun::Log => write!(f, "f log(){{ [native code] }}")
+                }
+            }
+            JSItem::St { statement } => {
+                write!(f, "statement")
+            }
+            JSItem::Number {value} => {
+                write!(f, "{}", value)
+            }
+            JSItem::String {value} => {
+                write!(f, "{}", value)
+            }
+            _ => {
+                write!(f, "hi")
+            }
+        }
     }
 }

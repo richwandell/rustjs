@@ -1,9 +1,8 @@
-let f = () => {
-    console.log("hi");
+let f = (c) => {
+    console.log(c);
 };
 
-let a = "hi";
+let a = "there";
 let b = 123;
-let c = {};
 
-f();
+f(a);

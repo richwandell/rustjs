@@ -1,5 +1,6 @@
+#[allow(dead_code)]
 #[derive(Debug, PartialEq, Clone)]
-pub enum Tok {
+pub(crate) enum Tok {
     Await,
     Break,
     Case,

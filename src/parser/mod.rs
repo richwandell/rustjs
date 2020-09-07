@@ -1,3 +1,4 @@
-pub mod symbols;
-pub mod parser;
+pub(crate) mod symbols;
+pub(crate) mod parser;
 mod tests;
+pub(crate) mod combine;

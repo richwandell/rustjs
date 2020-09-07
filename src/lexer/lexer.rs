@@ -2,12 +2,12 @@ use crate::lexer::find_token::find_token;
 use crate::lexer::js_token::Tok;
 use crate::lexer::string_iterator::StringIterator;
 
-pub enum LexError {
+pub(crate) enum LexError {
     Error { text: String },
     End
 }
 
-pub struct Lexer {
+pub(crate) struct Lexer {
     pub(crate) tokens: Vec<Tok>
 }
 

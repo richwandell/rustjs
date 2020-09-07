@@ -2,6 +2,7 @@ use crate::lexer::lexer::LexError;
 use crate::lexer::string_iterator::StringIterator;
 use crate::lexer::js_token::Tok;
 
+#[allow(unused_must_use)]
 fn find_float(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     word.push(ch);
@@ -49,6 +50,7 @@ fn find_string_double_quote(it: &mut StringIterator) -> Result<Vec<Tok>, LexErro
     return Ok(vec![Tok::String { value: word }]);
 }
 
+#[allow(unused_must_use)]
 fn find_equal(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("=");
 
@@ -131,6 +133,7 @@ fn find_const(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     return Ok(vec![Tok::Const, Tok::Name { name: word }]);
 }
 
+#[allow(unused_must_use)]
 fn find_gt_lt(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
     word.push(ch);
@@ -184,6 +187,7 @@ fn find_gt_lt(it: &mut StringIterator, ch: char) -> Result<Vec<Tok>, LexError> {
     return Err(LexError::Error { text: String::from("Unexpected Token") });
 }
 
+#[allow(unused_must_use)]
 fn find_if(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     it.prev();
     let mut parens = vec![];
@@ -233,6 +237,7 @@ fn find_if(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     return Ok(return_tokens);
 }
 
+#[allow(unused_must_use)]
 fn find_end_of_line(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     loop {
         let ch = it.next();
@@ -251,7 +256,7 @@ fn find_end_of_line(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     return Ok(vec![Tok::EndOfLine])
 }
 
-pub fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
+pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
 
     loop {

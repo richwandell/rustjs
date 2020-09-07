@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use crate::lexer::string_iterator::StringIterator;
 
 mod functions;

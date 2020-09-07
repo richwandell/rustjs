@@ -139,3 +139,26 @@ fn test_div5() {
     }))
 }
 
+#[test]
+fn test_add_sub() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("3 + 2 - 1"));
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+    let expression = js_items.get(0).unwrap();
+
+    assert!(expression.eq(&JSItem::Ex {
+        expression: Box::new(Expression::Binop {
+            a: Box::new(Expression::Binop {
+                a: Box::new(Expression::Number {value: 3.}),
+                op: Operator::Add,
+                b: Box::new(Expression::Number {value: 2.})
+            }),
+            op: Operator::Sub,
+            b: Box::new(Expression::Number {value: 1. })
+        })
+    }))
+}
+
