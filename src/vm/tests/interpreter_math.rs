@@ -10,7 +10,7 @@ fn test_simple_add() {
     let tokens = lex.lex(String::from("1 + 2 + 3"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 6.});
 }
@@ -22,7 +22,7 @@ fn test_simple_sub() {
     let tokens = lex.lex(String::from("3 - 2"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 1.});
 }
@@ -34,7 +34,7 @@ fn test_simple_mul() {
     let tokens = lex.lex(String::from("3 * 2"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 6.});
 }
@@ -46,7 +46,7 @@ fn test_simple_div() {
     let tokens = lex.lex(String::from("3 / 2"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 1.5});
 }
@@ -58,7 +58,7 @@ fn test_add_sub() {
     let tokens = lex.lex(String::from("3 + 2 - 1"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 4.});
 }
@@ -70,7 +70,7 @@ fn test_add_sub_expression() {
     let tokens = lex.lex(String::from("(3 + 2) - 1"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 4.});
 }
@@ -82,7 +82,7 @@ fn test_sub_add_expression() {
     let tokens = lex.lex(String::from("3 - (2 + 1)"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 0.});
 }
@@ -94,7 +94,7 @@ fn test_add_mul() {
     let tokens = lex.lex(String::from("3 + 2 * 3"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 9.});
 }
@@ -106,7 +106,7 @@ fn test_mul_add() {
     let tokens = lex.lex(String::from("3 * 2 + 3"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 9.});
 }
@@ -118,7 +118,7 @@ fn test_mul_add_expression() {
     let tokens = lex.lex(String::from("3 * (2 + 3)"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 15.});
 }
@@ -130,7 +130,7 @@ fn test_mul_expression_add() {
     let tokens = lex.lex(String::from("(3 * 2) + 3"));
     let mut js_items = parser.parse(tokens);
 
-    let int = Interpreter::new();
+    let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
     assert_eq!(out, JSOutput::Number {value: 9.});
 }
