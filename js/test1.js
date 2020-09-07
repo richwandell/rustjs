@@ -1,8 +1,9 @@
-let f = (c) => {
-    console.log(c);
+let f = (a, b, c) => {
+    console.log(a, b, "rich");
 };
-
-let a = "there";
+let a = "rich"
+console.log(a)
+let a = 1 + 2;
 let b = 123;
 
-f(a);
+f(a, b);

@@ -104,3 +104,37 @@ fn test_let_math_declaration1() {
         })
     }))
 }
+
+#[test]
+fn test_let_var_plus_var() {
+    let file = fs::read_to_string("js/variables/let_a_math1.js");
+
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(file.unwrap());
+    let js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+    let function = js_items.get(0).unwrap();
+    assert!(function.eq(&JSItem::St {
+        statement: Box::new(Statement::AssignExpression {
+            mutable: true,
+            name: "a".to_string(),
+            value: Box::new(Expression::Binop {
+                a: Box::new(Expression::Number { value: 1. }),
+                op: Operator::Add,
+                b: Box::new(Expression::Binop {
+                    a: Box::new(Expression::Number {value: 2.}),
+                    op: Operator::Mult,
+                    b: Box::new(Expression::SubExpression {
+                        expression: Box::new(Expression::Binop {
+                            a: Box::new(Expression::Number {value: 3.}),
+                            op: Operator::Add,
+                            b: Box::new(Expression::Number {value: 2.})
+                        })
+                    })
+                }),
+            }),
+        })
+    }))
+}

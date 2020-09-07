@@ -27,3 +27,4 @@ impl Display for JSOutput {
         }
     }
 }
+

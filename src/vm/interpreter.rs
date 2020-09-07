@@ -4,11 +4,7 @@ use crate::vm::js_output::{JSOutput};
 use crate::vm::bin_op::{bin_add, bin_mul, bin_sub, bin_div};
 use std::collections::HashMap;
 use crate::lexer::js_token::Tok;
-use std::borrow::Borrow;
-
-pub(crate) struct Interpreter {
-    objects: HashMap<String, JSItem>
-}
+use crate::vm::std::{std_log, create_std_objects};
 
 fn o_to_v(js_out: JSOutput, mutable: bool) -> JSItem {
     return match js_out {
@@ -33,31 +29,6 @@ fn o_to_v(js_out: JSOutput, mutable: bool) -> JSItem {
     };
 }
 
-fn std_log(params: Vec<JSItem>) {
-    for p in params {
-        println!("{}", p);
-    }
-}
-
-fn create_console() -> JSItem {
-    let mut p = HashMap::new();
-    let log = JSItem::Std {
-        params: vec![Tok::Name {name: "item".to_string()}],
-        func: StdFun::Log
-    };
-    p.insert("log".to_string(), log);
-    JSItem::Object {
-        mutable: false,
-        properties: p
-    }
-}
-
-fn create_std_objects() -> HashMap<String, JSItem> {
-    let mut f = HashMap::new();
-    f.insert("console".to_string(), create_console());
-    return f;
-}
-
 fn find_func(objects: &HashMap<String, JSItem>, object: Box<Expression>, property: Box<Expression>) -> Option<&JSItem> {
     match *object {
         Expression::Identifier { name } => {
@@ -66,7 +37,7 @@ fn find_func(objects: &HashMap<String, JSItem>, object: Box<Expression>, propert
             match object {
                 Some(obj) => {
                     match obj {
-                        JSItem::Object { mutable, properties } => {
+                        JSItem::Object { mutable: _, properties } => {
                             match *property {
                                 Expression::Identifier { name } => {
                                     let p = properties.get(&name);
@@ -92,19 +63,70 @@ fn find_func(objects: &HashMap<String, JSItem>, object: Box<Expression>, propert
     }
 }
 
+pub(crate) struct Interpreter {
+    objects: HashMap<String, JSItem>,
+    call_stack: Vec<HashMap<String, JSItem>>,
+    current_call_stack: usize
+}
+
 impl Interpreter {
 
+    pub(crate) fn new() -> Interpreter {
+        Interpreter {
+            objects: create_std_objects(),
+            call_stack: vec![create_std_objects()],
+            current_call_stack: 0
+        }
+    }
+
+    fn find_object(&mut self, name: &String) -> Result<(JSItem, usize), ()> {
+        for i in (0..=self.current_call_stack).rev() {
+            let objects = self.call_stack.get_mut(i).unwrap();
+            let object = objects.remove(name);
+            if let Some(object) = object {
+                return Ok((object, i));
+            }
+        }
+        Err(())
+    }
+
+    fn add_params_to_call_stack(&mut self, mut names: Vec<Tok>, mut items: Vec<JSItem>) {
+        while !items.is_empty() {
+            let item = items.pop().unwrap();
+            if let Tok::Name {name} = names.pop().unwrap() {
+                self.call_stack.get_mut(self.current_call_stack)
+                    .unwrap()
+                    .insert(name, item);
+            }
+        }
+    }
+
     fn call_identifier(&mut self, name: String, arguments: Vec<Tok>) -> Result<JSOutput, ()>{
-        let func = self.objects.get(&name);
+        let func = self.find_object(&name);
         match func {
-            Some(f) => {
-                match f {
+            Ok(f) => {
+                match f.0 {
                     JSItem::Function { mutable, params, properties, body } => {
-                        let args = self.make_params(arguments);
+                        let body_clone = body.clone();
+                        let params_clone = params.clone();
+                        //first add the function back where it belongs in the call stack
+                        self.call_stack.get_mut(f.1)
+                            .unwrap()
+                            .insert(name, JSItem::Function {
+                                mutable, params, properties, body
+                            });
+                        //create a new stack frame for local vars
+                        let new_frame = HashMap::new();
+                        self.call_stack.push(new_frame);
+                        self.current_call_stack += 1;
+                        let args = self.make_params(params_clone, arguments);
+                        self.add_params_to_call_stack(args.0, args.1);
+
                         let mut out = JSOutput::Null;
-                        for item in body.clone() {
+                        for item in body_clone {
                             out = self.interpret(item);
                         }
+
                         return Ok(out);
                     }
                     _ => {
@@ -112,28 +134,53 @@ impl Interpreter {
                     }
                 }
             }
-            None => Err(())
+            Err(_) => Err(())
         }
     }
 
-    fn make_params(&self, arguments: Vec<Tok>) -> Vec<JSItem> {
-        let mut params = vec![];
-        for item in arguments {
-            match item {
-                Tok::Name {name} => {
-                    let value = self.objects.get(&name).unwrap().clone();
-                    params.push(value)
+    fn make_params(&mut self, mut params: Vec<Tok>, mut arguments: Vec<Tok>) -> (Vec<Tok>, Vec<JSItem>) {
+        arguments.reverse();
+
+        let mut new_params = vec![];
+        while !params.is_empty() {
+            let tok = params.pop().unwrap();
+            match tok {
+                Tok::Comma => {},
+                _ => {
+                    new_params.push(tok);
                 }
-                Tok::String {value} => {
-                    params.push(JSItem::String {value});
-                }
-                Tok::Float {value} => {
-                    params.push(JSItem::Number {value})
-                }
-                _ => {}
             }
         }
-        return params;
+
+        let mut names = vec![];
+        let mut items = vec![];
+        while !arguments.is_empty() {
+            if let Some(arg) = arguments.pop() {
+                match arg {
+                    Tok::Comma => {
+                        continue;
+                    }
+                    Tok::Name {name} => {
+                        if let Ok(obj) = self.find_object(&name) {
+                            items.push(obj.0.clone());
+                            self.call_stack.get_mut(obj.1)
+                                .unwrap()
+                                .insert(name, obj.0);
+                            names.push(new_params.pop().unwrap_or(Tok::Name {name: "extra".to_string()}));
+                        }
+                    }
+                    Tok::String {value} => {
+                        items.push(JSItem::String {value});
+                        names.push(new_params.pop().unwrap_or(Tok::Name {name: "extra".to_string()}));
+                    }
+                    _ => {
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return (names, items);
     }
 
     fn call_member_ex(&mut self, object: Box<Expression>, property: Box<Expression>, arguments: Vec<Tok>) -> Result<JSOutput, ()>{
@@ -141,18 +188,18 @@ impl Interpreter {
         match func {
             Some(f) => {
                 match f {
-                    JSItem::Function { mutable, params, properties, body } => {
+                    JSItem::Function { mutable:_, params:_, properties:_, body } => {
                         let mut out = JSOutput::Null;
                         for item in body.clone() {
                             out = self.interpret(item);
                         }
                         return Ok(out);
                     }
-                    JSItem::Std { params, func } => {
+                    JSItem::Std { params:_, func } => {
                         match func {
-                            StdFun::Log => {
-                                let args = self.make_params(arguments);
-                                std_log(args);
+                            StdFun::ConsoleLog => {
+                                let args = self.make_params(arguments.clone(), arguments.clone());
+                                std_log(args.1);
                                 return Ok(JSOutput::Null)
                             }
                         }
@@ -163,12 +210,6 @@ impl Interpreter {
                 }
             }
             None => Err(())
-        }
-    }
-
-    pub(crate) fn new() -> Interpreter {
-        Interpreter {
-            objects: create_std_objects()
         }
     }
 
@@ -241,7 +282,9 @@ impl Interpreter {
                         properties.insert("name".to_string(), JSItem::Ex {
                             expression: Box::new(Expression::Literal { value: name.clone() })
                         });
-                        self.objects.insert(name.clone(), JSItem::Function {
+                        self.call_stack.get_mut(self.current_call_stack)
+                            .unwrap()
+                            .insert(name.clone(), JSItem::Function {
                             mutable,
                             properties,
                             params,
@@ -257,7 +300,9 @@ impl Interpreter {
             Statement::AssignExpression { mutable, name, value } => {
                 let eval = self.visit_ex(value);
                 let exp = o_to_v(eval, mutable);
-                self.objects.insert(name, exp);
+                self.call_stack.get_mut(self.current_call_stack)
+                    .unwrap()
+                    .insert(name, exp);
                 JSOutput::Null
             }
             _ => {

@@ -110,9 +110,10 @@ pub(crate) enum Statement {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum StdFun {
-    Log
+    ConsoleLog
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum JSItem {
     Number {
@@ -157,12 +158,12 @@ pub(crate) enum JSItem {
 impl Display for JSItem {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            JSItem::Std { params, func } => {
+            JSItem::Std { params: _, func } => {
                 match func {
-                    StdFun::Log => write!(f, "f log(){{ [native code] }}")
+                    StdFun::ConsoleLog => write!(f, "f log(){{ [native code] }}")
                 }
             }
-            JSItem::St { statement } => {
+            JSItem::St { statement:_ } => {
                 write!(f, "statement")
             }
             JSItem::Number {value} => {
@@ -171,8 +172,31 @@ impl Display for JSItem {
             JSItem::String {value} => {
                 write!(f, "{}", value)
             }
+            JSItem::Variable { mutable: _, value } => {
+                match value {
+                    Expression::String {value} => {
+                        write!(f, "{}", value)
+                    }
+                    Expression::Number { value } => {
+                        write!(f, "{}", value)
+                    }
+                    Expression::Literal { value } => {
+                        write!(f, "{}", value)
+                    }
+                    Expression::Null => {
+                        write!(f, "null")
+                    }
+                    Expression::True => {
+                        write!(f, "true")
+                    }
+                    Expression::False => {
+                        write!(f, "false")
+                    }
+                    _ => write!(f, "")
+                }
+            }
             _ => {
-                write!(f, "hi")
+                write!(f, "")
             }
         }
     }
