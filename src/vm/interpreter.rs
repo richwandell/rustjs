@@ -1,12 +1,16 @@
-use crate::parser::symbols::{JSItem, Operator, Statement, StdFun};
+use crate::parser::symbols::{JSItem, Operator, Statement, StdFun, AssignOp};
 use crate::parser::symbols::Expression;
 use crate::vm::js_output::{JSOutput};
-use crate::vm::bin_op::{bin_add, bin_mul, bin_sub, bin_div};
+use crate::vm::bin_op::{bin_add, bin_mul, bin_sub, bin_div, bin_less};
 use std::collections::HashMap;
 use crate::lexer::js_token::Tok;
 use crate::vm::std::{std_log, create_std_objects};
 
-fn o_to_v(js_out: JSOutput, mutable: bool) -> JSItem {
+fn o_to_v(js_out: JSOutput, assign_op: AssignOp) -> JSItem {
+    let mut mutable = false;
+    if assign_op.eq(&AssignOp::Let) || assign_op.eq(&AssignOp::Var) {
+        mutable = true;
+    }
     return match js_out {
         JSOutput::String { value } => {
             JSItem::Variable {
@@ -24,6 +28,19 @@ fn o_to_v(js_out: JSOutput, mutable: bool) -> JSItem {
             JSItem::Variable {
                 mutable,
                 value: Expression::Null,
+            }
+        }
+        JSOutput::Bool { value } => {
+            if value {
+                JSItem::Variable {
+                    mutable,
+                    value: Expression::True
+                }
+            } else {
+                JSItem::Variable {
+                    mutable,
+                    value: Expression::False
+                }
             }
         }
     };
@@ -65,8 +82,8 @@ fn find_func(objects: &HashMap<String, JSItem>, object: Box<Expression>, propert
 
 pub(crate) struct Interpreter {
     objects: HashMap<String, JSItem>,
-    call_stack: Vec<HashMap<String, JSItem>>,
-    current_call_stack: usize,
+    scopes: Vec<HashMap<String, JSItem>>,
+    scope: usize,
     #[cfg(test)]
     pub(crate) captured_output: Vec<Vec<JSItem>>
 }
@@ -76,15 +93,16 @@ impl Interpreter {
     pub(crate) fn new() -> Interpreter {
         Interpreter {
             objects: create_std_objects(),
-            call_stack: vec![create_std_objects()],
-            current_call_stack: 0,
+            scopes: vec![create_std_objects()],
+            scope: 0,
+            #[cfg(test)]
             captured_output: vec![]
         }
     }
 
     fn find_object(&mut self, name: &String) -> Result<(JSItem, usize), ()> {
-        for i in (0..=self.current_call_stack).rev() {
-            let objects = self.call_stack.get_mut(i).unwrap();
+        for i in (0..=self.scope).rev() {
+            let objects = self.scopes.get_mut(i).unwrap();
             let object = objects.remove(name);
             if let Some(object) = object {
                 return Ok((object, i));
@@ -93,11 +111,17 @@ impl Interpreter {
         Err(())
     }
 
+    fn replace_object(&mut self, scope: usize, object: JSItem, name: String) {
+        self.scopes.get_mut(scope)
+            .unwrap()
+            .insert(name, object);
+    }
+
     fn add_params_to_call_stack(&mut self, mut names: Vec<Tok>, mut items: Vec<JSItem>) {
         while !items.is_empty() {
             let item = items.pop().unwrap();
             if let Tok::Name {name} = names.pop().unwrap() {
-                self.call_stack.get_mut(self.current_call_stack)
+                self.scopes.get_mut(self.scope)
                     .unwrap()
                     .insert(name, item);
             }
@@ -113,15 +137,15 @@ impl Interpreter {
                         let body_clone = body.clone();
                         let params_clone = params.clone();
                         //first add the function back where it belongs in the call stack
-                        self.call_stack.get_mut(f.1)
+                        self.scopes.get_mut(f.1)
                             .unwrap()
                             .insert(name, JSItem::Function {
                                 mutable, params, properties, body
                             });
                         //create a new stack frame for local vars
                         let new_frame = HashMap::new();
-                        self.call_stack.push(new_frame);
-                        self.current_call_stack += 1;
+                        self.scopes.push(new_frame);
+                        self.scope += 1;
                         let args = self.make_params(params_clone, arguments);
                         self.add_params_to_call_stack(args.0, args.1);
 
@@ -166,7 +190,7 @@ impl Interpreter {
                     Tok::Name {name} => {
                         if let Ok(obj) = self.find_object(&name) {
                             items.push(obj.0.clone());
-                            self.call_stack.get_mut(obj.1)
+                            self.scopes.get_mut(obj.1)
                                 .unwrap()
                                 .insert(name, obj.0);
                             names.push(new_params.pop().unwrap_or(Tok::Name {name: "extra".to_string()}));
@@ -199,8 +223,6 @@ impl Interpreter {
                         return Ok(out);
                     }
                     JSItem::Std { params:_, func } => {
-
-
                         match func {
                             #[allow(unreachable_code)]
                             StdFun::ConsoleLog => {
@@ -237,6 +259,9 @@ impl Interpreter {
             Operator::Div => {
                 bin_div(self.visit_ex(a), self.visit_ex(b)).unwrap()
             }
+            Operator::Less => {
+                bin_less(self.visit_ex(a), self.visit_ex(b)).unwrap()
+            }
             _ => {
                 JSOutput::Null
             }
@@ -257,8 +282,69 @@ impl Interpreter {
         }
     }
 
+    fn visit_ident(&mut self, name: String) -> JSOutput {
+        let object = self.find_object(&name);
+        match object {
+            Ok(obj) => {
+                match obj.0 {
+                    JSItem::Variable { mutable, value } => {
+                        match value {
+                            Expression::String {value} => {
+                                let out = JSOutput::String {value: value.clone()};
+                                self.replace_object(obj.1, JSItem::Variable {
+                                    mutable,
+                                    value: Expression::String {value}
+                                }, name);
+                                return out;
+                            }
+                            Expression::Number {value} => {
+                                self.replace_object(obj.1, JSItem::Variable {
+                                    mutable,
+                                    value: Expression::Number {value}
+                                }, name);
+                                return JSOutput::Number {value: value.clone()};
+                            }
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                }
+            },
+            Err(_) => {}
+        }
+        JSOutput::Null
+    }
+
+    fn visit_ex_up(&mut self, ex: Box<Expression>) -> JSOutput {
+        if let Expression::Identifier {name} = *ex {
+            if let Ok(obj) = self.find_object(&name) {
+                if let JSItem::Variable {mutable, value} = obj.0 {
+                    match value {
+                        Expression::String {value:_} => {
+                            self.replace_object(obj.1, JSItem::NaN, name);
+                        }
+                        Expression::Number {value} => {
+                            self.replace_object(obj.1, JSItem::Variable {
+                                mutable,
+                                value: Expression::Number {value: value + 1.}
+                            }, name);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+        JSOutput::Null
+    }
+
     fn visit_ex(&mut self, ex: Box<Expression>) -> JSOutput {
         match *ex {
+            Expression::UpdateExpression {expression} => {
+                self.visit_ex_up(expression)
+            }
+            Expression::Identifier {name} => {
+                self.visit_ident(name)
+            }
             Expression::Literal { value } => {
                 JSOutput::String { value }
             }
@@ -280,8 +366,44 @@ impl Interpreter {
         }
     }
 
+    fn create_new_scope(&mut self) {
+        let scope = HashMap::new();
+        self.scopes.push(scope);
+        self.scope += 1;
+    }
+
+    #[allow(dead_code)]
+    fn remove_current_scope(&mut self) {
+        self.scopes.pop();
+        self.scope -= 1;
+    }
+
+    fn visit_for_statement(&mut self, init: JSItem, test: JSItem, update: JSItem, body: Vec<JSItem>) -> JSOutput {
+        self.create_new_scope();
+        self.visit(init);
+        loop {
+            let cloned_test = test.clone();
+            let test_out = self.visit(cloned_test);
+            if let JSOutput::Bool {value} = test_out {
+                if !value {
+                    break;
+                }
+            }
+
+            for item in body.clone() {
+                self.interpret(item);
+            }
+
+            self.visit(update.clone());
+        }
+        JSOutput::Null
+    }
+
     fn visit_st(&mut self, st: Box<Statement>) -> JSOutput {
         match *st {
+            Statement::ForStatement { init, test, update, body } => {
+                return self.visit_for_statement(init, test, update, body);
+            }
             Statement::AssignArrowFunction { mutable, function } => {
                 match *function {
                     Statement::FunctionDef { name, params, body } => {
@@ -292,7 +414,7 @@ impl Interpreter {
                         properties.insert("name".to_string(), JSItem::Ex {
                             expression: Box::new(Expression::Literal { value: name.clone() })
                         });
-                        self.call_stack.get_mut(self.current_call_stack)
+                        self.scopes.get_mut(self.scope)
                             .unwrap()
                             .insert(name.clone(), JSItem::Function {
                             mutable,
@@ -307,10 +429,10 @@ impl Interpreter {
                     }
                 }
             }
-            Statement::AssignExpression { mutable, name, value } => {
+            Statement::AssignExpression { assign_op, name, value } => {
                 let eval = self.visit_ex(value);
-                let exp = o_to_v(eval, mutable);
-                self.call_stack.get_mut(self.current_call_stack)
+                let exp = o_to_v(eval, assign_op);
+                self.scopes.get_mut(self.scope)
                     .unwrap()
                     .insert(name, exp);
                 JSOutput::Null

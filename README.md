@@ -6,3 +6,4 @@ A toy JavaScript interpreter written in Rust.
 </p>
 
   
+<img src="readme1.gif" />

@@ -9,6 +9,9 @@ pub(crate) enum JSOutput {
     String {
         value: String
     },
+    Bool {
+        value: bool
+    },
     Null
 }
 
@@ -23,6 +26,9 @@ impl Display for JSOutput {
             }
             JSOutput::Null => {
                 Result::Ok(())
+            }
+            JSOutput::Bool { value } => {
+                write!(f, "{}", value)
             }
         }
     }

@@ -1,7 +1,7 @@
 use crate::lexer::lexer::Lexer;
 use std::fs;
 use crate::parser::parser::Parser;
-use crate::parser::symbols::{Expression, Statement, Operator};
+use crate::parser::symbols::{Expression, Statement, Operator, AssignOp};
 use crate::parser::symbols::JSItem;
 use crate::lexer::js_token::Tok;
 
@@ -20,7 +20,7 @@ fn test_for() {
         statement: Box::new(Statement::ForStatement {
             init: JSItem::St {
                 statement: Box::new(Statement::AssignExpression {
-                    mutable: true,
+                    assign_op: AssignOp::Let,
                     name: "i".to_string(),
                     value: Box::new(Expression::Number {value: 0.})
                 })

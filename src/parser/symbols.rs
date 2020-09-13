@@ -64,6 +64,14 @@ pub(crate) enum Operator {
 
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
+pub(crate) enum AssignOp {
+    Let,
+    Const,
+    Var
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Statement {
     //temporary non filled in statement
     None,
@@ -75,7 +83,7 @@ pub(crate) enum Statement {
     Return { value: Option<Expression> },
 
     AssignExpression {
-        mutable: bool,
+        assign_op: AssignOp,
         name: String,
         value: Box<Expression>,
     },
@@ -129,7 +137,7 @@ pub(crate) enum JSItem {
     Number {
         value: f64
     },
-
+    NaN,
     String {
         value: String
     },

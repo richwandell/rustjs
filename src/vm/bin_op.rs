@@ -56,3 +56,17 @@ pub(crate) fn bin_div(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
         _ => Err(())
     }
 }
+
+pub(crate) fn bin_less(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
+    match a {
+        JSOutput::Number { value: v1 } => {
+            match b {
+                JSOutput::Number { value: v2 } => {
+                    Ok(JSOutput::Bool { value: v1 < v2 })
+                }
+                _ => Err(())
+            }
+        }
+        _ => Err(())
+    }
+}

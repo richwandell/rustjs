@@ -13,12 +13,6 @@ use crate::vm::js_output::JSOutput;
 
 extern crate clap;
 
-macro_rules! run_js {
-    ($expression:expr) => {
-        println!("{}", $expression);
-    }
-}
-
 fn main() {
     let matches = App::new("Rust JS")
         .version("0.1")
@@ -37,7 +31,6 @@ fn main() {
 
     match js_code {
         Ok(code) => {
-            run_js!(code);
             let mut lex = Lexer::new();
             let mut parser = Parser::new();
             let tokens = lex.lex(code);

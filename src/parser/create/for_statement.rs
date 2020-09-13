@@ -1,6 +1,5 @@
 use crate::lexer::js_token::Tok;
 use crate::parser::symbols::{JSItem, Statement};
-use crate::parser::create::expression::create_expression;
 use crate::parser::parser::Parser;
 
 pub(crate) fn create_for_statement(mut tokens: Vec<Tok>) -> JSItem {

@@ -1,10 +1,16 @@
 use crate::lexer::js_token::Tok;
-use crate::parser::symbols::{JSItem, Statement, Expression, Operator};
+use crate::parser::symbols::{JSItem, Statement, Expression, AssignOp};
 use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus, combine_float, combine_dot, combine_name, combine_string, combine_call, combine_expression, combine_less};
 
 pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> JSItem {
     tokens.reverse();
-    let mutable = tokens.pop().unwrap();
+    let assign_op_tok = tokens.pop().unwrap();
+    let mut assign_op = AssignOp::Let;
+    if assign_op_tok.eq(&Tok::Const) {
+        assign_op = AssignOp::Const;
+    } else if assign_op_tok.eq(&Tok::Var) {
+        assign_op = AssignOp::Var;
+    }
     let mut variable_name = "".to_string();
     match tokens.pop().unwrap() {
         Tok::Name { name } => {
@@ -21,7 +27,7 @@ pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> JSItem {
         JSItem::Ex {expression} => {
             return JSItem::St {
                 statement: Box::new(Statement::AssignExpression {
-                    mutable: mutable.eq(&Tok::Let),
+                    assign_op,
                     name: variable_name,
                     value: expression
                 })
