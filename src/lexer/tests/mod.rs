@@ -5,6 +5,7 @@ mod functions;
 mod if_statement;
 mod math;
 mod one_liners;
+mod for_statements;
 
 #[test]
 fn test_iterator() {

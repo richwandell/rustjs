@@ -272,6 +272,9 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
 
                 if ch == '(' {
                     if word.len() > 0 {
+                        if word == "for" {
+                            return Ok(vec![Tok::For, Tok::Lpar]);
+                        }
                         if word == "function" {
                             return Ok(vec![Tok::Function, Tok::Lpar]);
                         }
@@ -284,6 +287,9 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                 }
 
                 if ch == ' ' && word.len() > 0 {
+                    if word == "for" {
+                        return Ok(vec![Tok::For]);
+                    }
                     if word == "let" {
                         return find_let(it);
                     }
@@ -353,10 +359,16 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                 }
 
                 if ch == '+' {
+                    if word.len() > 0 {
+                        return Ok(vec![Tok::Name {name: word}, Tok::Plus]);
+                    }
                     return Ok(vec![Tok::Plus]);
                 }
 
                 if ch == '-' {
+                    if word.len() > 0 {
+                        return Ok(vec![Tok::Name {name: word}, Tok::Minus]);
+                    }
                     return Ok(vec![Tok::Minus]);
                 }
 

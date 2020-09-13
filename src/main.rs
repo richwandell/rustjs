@@ -1,4 +1,5 @@
 #![allow(unused_mut)]
+
 mod lexer;
 mod parser;
 mod vm;
@@ -11,6 +12,12 @@ use crate::vm::interpreter::Interpreter;
 use crate::vm::js_output::JSOutput;
 
 extern crate clap;
+
+macro_rules! run_js {
+    ($expression:expr) => {
+        println!("{}", $expression);
+    }
+}
 
 fn main() {
     let matches = App::new("Rust JS")
@@ -30,6 +37,7 @@ fn main() {
 
     match js_code {
         Ok(code) => {
+            run_js!(code);
             let mut lex = Lexer::new();
             let mut parser = Parser::new();
             let tokens = lex.lex(code);

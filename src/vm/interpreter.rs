@@ -66,7 +66,9 @@ fn find_func(objects: &HashMap<String, JSItem>, object: Box<Expression>, propert
 pub(crate) struct Interpreter {
     objects: HashMap<String, JSItem>,
     call_stack: Vec<HashMap<String, JSItem>>,
-    current_call_stack: usize
+    current_call_stack: usize,
+    #[cfg(test)]
+    pub(crate) captured_output: Vec<Vec<JSItem>>
 }
 
 impl Interpreter {
@@ -75,7 +77,8 @@ impl Interpreter {
         Interpreter {
             objects: create_std_objects(),
             call_stack: vec![create_std_objects()],
-            current_call_stack: 0
+            current_call_stack: 0,
+            captured_output: vec![]
         }
     }
 
@@ -196,9 +199,16 @@ impl Interpreter {
                         return Ok(out);
                     }
                     JSItem::Std { params:_, func } => {
+
+
                         match func {
+                            #[allow(unreachable_code)]
                             StdFun::ConsoleLog => {
                                 let args = self.make_params(arguments.clone(), arguments.clone());
+                                #[cfg(test)]{
+                                    self.captured_output.push(args.1 );
+                                    return Ok(JSOutput::Null)
+                                }
                                 std_log(args.1);
                                 return Ok(JSOutput::Null)
                             }
