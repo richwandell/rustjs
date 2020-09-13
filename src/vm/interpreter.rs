@@ -46,6 +46,23 @@ fn o_to_v(js_out: JSOutput, assign_op: AssignOp) -> JSItem {
     };
 }
 
+fn o_to_i(js_out: JSOutput) -> JSItem {
+    return match js_out {
+        JSOutput::String { value } => {
+            JSItem::String { value }
+        }
+        JSOutput::Number { value } => {
+            JSItem::Number { value }
+        }
+        JSOutput::Null => {
+            JSItem::Null
+        }
+        JSOutput::Bool { value } => {
+            JSItem::Bool { value }
+        }
+    };
+}
+
 fn find_func(objects: &HashMap<String, JSItem>, object: Box<Expression>, property: Box<Expression>) -> Option<&JSItem> {
     match *object {
         Expression::Identifier { name } => {
@@ -81,7 +98,6 @@ fn find_func(objects: &HashMap<String, JSItem>, object: Box<Expression>, propert
 }
 
 pub(crate) struct Interpreter {
-    objects: HashMap<String, JSItem>,
     scopes: Vec<HashMap<String, JSItem>>,
     scope: usize,
     #[cfg(test)]
@@ -92,7 +108,6 @@ impl Interpreter {
 
     pub(crate) fn new() -> Interpreter {
         Interpreter {
-            objects: create_std_objects(),
             scopes: vec![create_std_objects()],
             scope: 0,
             #[cfg(test)]
@@ -100,12 +115,23 @@ impl Interpreter {
         }
     }
 
-    fn find_object(&mut self, name: &String) -> Result<(JSItem, usize), ()> {
+    fn get_object(&mut self, name: &String) -> Result<(JSItem, usize), ()> {
         for i in (0..=self.scope).rev() {
             let objects = self.scopes.get_mut(i).unwrap();
             let object = objects.remove(name);
             if let Some(object) = object {
                 return Ok((object, i));
+            }
+        }
+        Err(())
+    }
+
+    fn find_object_scope(&mut self, name: &String) -> Result<usize, ()> {
+        for i in (0..=self.scope).rev() {
+            let objects = self.scopes.get_mut(i).unwrap();
+            let object = objects.get(name);
+            if let Some(object) = object {
+                return Ok(i);
             }
         }
         Err(())
@@ -117,7 +143,7 @@ impl Interpreter {
             .insert(name, object);
     }
 
-    fn add_params_to_call_stack(&mut self, mut names: Vec<Tok>, mut items: Vec<JSItem>) {
+    fn add_params_to_scope(&mut self, mut names: Vec<Tok>, mut items: Vec<JSItem>) {
         while !items.is_empty() {
             let item = items.pop().unwrap();
             if let Tok::Name {name} = names.pop().unwrap() {
@@ -128,8 +154,8 @@ impl Interpreter {
         }
     }
 
-    fn call_identifier(&mut self, name: String, arguments: Vec<Tok>) -> Result<JSOutput, ()>{
-        let func = self.find_object(&name);
+    fn call_identifier(&mut self, name: String, arguments: Vec<JSItem>) -> Result<JSOutput, ()>{
+        let func = self.get_object(&name);
         match func {
             Ok(f) => {
                 match f.0 {
@@ -142,12 +168,10 @@ impl Interpreter {
                             .insert(name, JSItem::Function {
                                 mutable, params, properties, body
                             });
-                        //create a new stack frame for local vars
-                        let new_frame = HashMap::new();
-                        self.scopes.push(new_frame);
-                        self.scope += 1;
+                        //create a new scope
+                        self.create_new_scope();
                         let args = self.make_params(params_clone, arguments);
-                        self.add_params_to_call_stack(args.0, args.1);
+                        self.add_params_to_scope(args.0, args.1);
 
                         let mut out = JSOutput::Null;
                         for item in body_clone {
@@ -165,7 +189,7 @@ impl Interpreter {
         }
     }
 
-    fn make_params(&mut self, mut params: Vec<Tok>, mut arguments: Vec<Tok>) -> (Vec<Tok>, Vec<JSItem>) {
+    fn make_params(&mut self, mut params: Vec<Tok>, mut arguments: Vec<JSItem>) -> (Vec<Tok>, Vec<JSItem>) {
         arguments.reverse();
 
         let mut new_params = vec![];
@@ -183,65 +207,58 @@ impl Interpreter {
         let mut items = vec![];
         while !arguments.is_empty() {
             if let Some(arg) = arguments.pop() {
-                match arg {
-                    Tok::Comma => {
-                        continue;
-                    }
-                    Tok::Name {name} => {
-                        if let Ok(obj) = self.find_object(&name) {
-                            items.push(obj.0.clone());
-                            self.scopes.get_mut(obj.1)
-                                .unwrap()
-                                .insert(name, obj.0);
-                            names.push(new_params.pop().unwrap_or(Tok::Name {name: "extra".to_string()}));
-                        }
-                    }
-                    Tok::String {value} => {
-                        items.push(JSItem::String {value});
-                        names.push(new_params.pop().unwrap_or(Tok::Name {name: "extra".to_string()}));
-                    }
-                    _ => {
-                        continue;
-                    }
-                }
+                let out = o_to_i(self.visit(arg));
+                names.push(new_params.pop().unwrap_or(Tok::Name {name: "extra".to_string()}));
+                items.push(out);
             }
         }
 
         return (names, items);
     }
 
-    fn call_member_ex(&mut self, object: Box<Expression>, property: Box<Expression>, arguments: Vec<Tok>) -> Result<JSOutput, ()>{
-        let func = find_func(&self.objects, object, property);
-        match func {
-            Some(f) => {
-                match f {
-                    JSItem::Function { mutable:_, params:_, properties:_, body } => {
-                        let mut out = JSOutput::Null;
-                        for item in body.clone() {
-                            out = self.interpret(item);
-                        }
-                        return Ok(out);
-                    }
-                    JSItem::Std { params:_, func } => {
-                        match func {
-                            #[allow(unreachable_code)]
-                            StdFun::ConsoleLog => {
-                                let args = self.make_params(arguments.clone(), arguments.clone());
-                                #[cfg(test)]{
-                                    self.captured_output.push(args.1 );
-                                    return Ok(JSOutput::Null)
+    fn call_member_ex(&mut self, object: Box<Expression>, property: Box<Expression>, arguments: Vec<JSItem>) -> Result<JSOutput, ()>{
+        if let Expression::Identifier {name} = *object {
+            let scope = self.find_object_scope(&name);
+            match scope {
+                Ok(s) => {
+                    let scope = self.scopes.get_mut(s).unwrap();
+                    let func = find_func(scope, Box::new(Expression::Identifier {name: name.clone()}), property);
+                    match func {
+                        Some(f) => {
+                            match f {
+                                JSItem::Function { mutable:_, params:_, properties:_, body } => {
+                                    let mut out = JSOutput::Null;
+                                    for item in body.clone() {
+                                        out = self.interpret(item);
+                                    }
+                                    return Ok(out);
                                 }
-                                std_log(args.1);
-                                return Ok(JSOutput::Null)
+                                JSItem::Std { params:_, func } => {
+                                    match func {
+                                        #[allow(unreachable_code)]
+                                        StdFun::ConsoleLog => {
+                                            let args = self.make_params(vec![], arguments.clone());
+                                            #[cfg(test)]{
+                                                self.captured_output.push(args.1 );
+                                                return Ok(JSOutput::Null)
+                                            }
+                                            std_log(args.1);
+                                            return Ok(JSOutput::Null)
+                                        }
+                                    }
+                                }
+                                _ => {
+                                    Err(())
+                                }
                             }
                         }
-                    }
-                    _ => {
-                        Err(())
+                        None => Err(())
                     }
                 }
+                Err(e) => return Err(e)
             }
-            None => Err(())
+        } else {
+            Err(())
         }
     }
 
@@ -268,7 +285,7 @@ impl Interpreter {
         }
     }
 
-    fn visit_call_ex(&mut self, callee: Box<Expression>, arguments: Vec<Tok>) -> JSOutput {
+    fn visit_call_ex(&mut self, callee: Box<Expression>, arguments: Vec<JSItem>) -> JSOutput {
         match *callee {
             Expression::MemberExpression { object, property } => {
                 self.call_member_ex(object, property, arguments).unwrap()
@@ -283,7 +300,7 @@ impl Interpreter {
     }
 
     fn visit_ident(&mut self, name: String) -> JSOutput {
-        let object = self.find_object(&name);
+        let object = self.get_object(&name);
         match object {
             Ok(obj) => {
                 match obj.0 {
@@ -307,6 +324,15 @@ impl Interpreter {
                             _ => {}
                         }
                     }
+                    JSItem::Number {value} => {
+                        self.replace_object(obj.1, JSItem::Number {value}, name);
+                        return JSOutput::Number {value: value.clone()};
+                    }
+                    JSItem::String {value} => {
+                        let out = JSOutput::String {value: value.clone()};
+                        self.replace_object(obj.1, JSItem::String {value}, name);
+                        return out;
+                    }
                     _ => {}
                 }
             },
@@ -317,7 +343,7 @@ impl Interpreter {
 
     fn visit_ex_up(&mut self, ex: Box<Expression>) -> JSOutput {
         if let Expression::Identifier {name} = *ex {
-            if let Ok(obj) = self.find_object(&name) {
+            if let Ok(obj) = self.get_object(&name) {
                 if let JSItem::Variable {mutable, value} = obj.0 {
                     match value {
                         Expression::String {value:_} => {
@@ -360,6 +386,9 @@ impl Interpreter {
             Expression::CallExpression { callee, arguments } => {
                 self.visit_call_ex(callee, arguments)
             }
+            Expression::String {value} => {
+                JSOutput::String {value}
+            }
             _ => {
                 JSOutput::Null
             }
@@ -399,6 +428,24 @@ impl Interpreter {
         JSOutput::Null
     }
 
+    fn declare_function_in_scope(&mut self, mutable: bool, name: String, params: Vec<Tok>, body: Vec<JSItem>) {
+        let mut properties = HashMap::new();
+        properties.insert("prototype".to_string(), JSItem::Ex {
+            expression: Box::new(Expression::String { value: name.clone() })
+        });
+        properties.insert("name".to_string(), JSItem::Ex {
+            expression: Box::new(Expression::Literal { value: name.clone() })
+        });
+        self.scopes.get_mut(self.scope)
+            .unwrap()
+            .insert(name.clone(), JSItem::Function {
+                mutable,
+                properties,
+                params,
+                body,
+            });
+    }
+
     fn visit_st(&mut self, st: Box<Statement>) -> JSOutput {
         match *st {
             Statement::ForStatement { init, test, update, body } => {
@@ -407,21 +454,7 @@ impl Interpreter {
             Statement::AssignArrowFunction { mutable, function } => {
                 match *function {
                     Statement::FunctionDef { name, params, body } => {
-                        let mut properties = HashMap::new();
-                        properties.insert("prototype".to_string(), JSItem::Ex {
-                            expression: Box::new(Expression::String { value: name.clone() })
-                        });
-                        properties.insert("name".to_string(), JSItem::Ex {
-                            expression: Box::new(Expression::Literal { value: name.clone() })
-                        });
-                        self.scopes.get_mut(self.scope)
-                            .unwrap()
-                            .insert(name.clone(), JSItem::Function {
-                            mutable,
-                            properties,
-                            params,
-                            body,
-                        });
+                        self.declare_function_in_scope(mutable, name, params, body);
                         JSOutput::Null
                     }
                     _ => {
@@ -435,6 +468,10 @@ impl Interpreter {
                 self.scopes.get_mut(self.scope)
                     .unwrap()
                     .insert(name, exp);
+                JSOutput::Null
+            }
+            Statement::FunctionDef { name, params, body } => {
+                self.declare_function_in_scope(true, name, params, body);
                 JSOutput::Null
             }
             _ => {

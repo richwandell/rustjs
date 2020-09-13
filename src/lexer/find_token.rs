@@ -375,6 +375,9 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                 }
 
                 if ch == ';' {
+                    if word.len() > 0 {
+                        return Ok(vec![Tok::Name {name: word}, Tok::Semi]);
+                    }
                     return Ok(vec![Tok::Semi]);
                 }
 

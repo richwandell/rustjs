@@ -46,10 +46,19 @@ impl Parser {
             let token = tokens.get(0).unwrap();
             match token {
                 Tok::Float { mut value } => {
-                    return vec![JSItem::Ex { expression: Box::new(Expression::Number { value }) }];
+                    return vec![JSItem::Ex {
+                        expression: Box::new(Expression::Number { value })
+                    }];
                 }
                 Tok::Name { name } => {
-                    return vec![JSItem::Ex { expression: Box::new(Expression::Identifier { name: name.clone() }) }];
+                    return vec![JSItem::Ex {
+                        expression: Box::new(Expression::Identifier { name: name.clone() })
+                    }];
+                }
+                Tok::String {value} => {
+                    return vec![JSItem::Ex {
+                        expression: Box::new(Expression::String {value: value.clone()})
+                    }];
                 }
                 _ => {}
             }

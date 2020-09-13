@@ -29,7 +29,7 @@ pub(crate) enum Expression {
     False, // The literal 'False'.
     CallExpression {
         callee: Box<Expression>,
-        arguments: Vec<Tok>
+        arguments: Vec<JSItem>
     },
     MemberExpression {
         object: Box<Expression>,
@@ -134,6 +134,11 @@ pub(crate) enum StdFun {
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum JSItem {
+    Bool {
+        value: bool
+    },
+    Null,
+    Undefined,
     Number {
         value: f64
     },

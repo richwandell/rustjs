@@ -230,6 +230,10 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     prev_type = "plus_plus";
                     j += 1;
                 }
+                Tok::Plus => {
+                    prev_type = "plus";
+                    j += 1;
+                }
                 _ => {
                     return j;
                 }

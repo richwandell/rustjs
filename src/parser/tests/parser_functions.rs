@@ -26,7 +26,9 @@ fn test_simple_function_declaration() {
                         object: Box::new(Expression::Identifier { name: "console".to_string() }),
                         property: Box::new(Expression::Identifier { name: "log".to_string() }),
                     }),
-                    arguments: vec![Tok::String { value: "hi".to_string() }],
+                    arguments: vec![JSItem::Ex {
+                        expression: Box::new(Expression::String {value: "hi".to_string()})
+                    }]
                 })
             }],
         })
@@ -56,7 +58,9 @@ fn test_let_arrow_function_declaration() {
                             object: Box::new(Expression::Identifier { name: "console".to_string() }),
                             property: Box::new(Expression::Identifier { name: "log".to_string() }),
                         }),
-                        arguments: vec![Tok::String { value: "hi".to_string() }],
+                        arguments: vec![JSItem::Ex {
+                            expression: Box::new(Expression::String {value: "hi".to_string()})
+                        }]
                     })
                 }],
             }),
@@ -87,7 +91,9 @@ fn test_let_function_declaration() {
                             object: Box::new(Expression::Identifier { name: "console".to_string() }),
                             property: Box::new(Expression::Identifier { name: "log".to_string() }),
                         }),
-                        arguments: vec![Tok::String { value: "hi".to_string() }],
+                        arguments: vec![JSItem::Ex {
+                            expression: Box::new(Expression::String {value: "hi".to_string()})
+                        }]
                     })
                 }],
             }),
@@ -118,7 +124,9 @@ fn test_const_arrow_function_declaration() {
                             object: Box::new(Expression::Identifier { name: "console".to_string() }),
                             property: Box::new(Expression::Identifier { name: "log".to_string() }),
                         }),
-                        arguments: vec![Tok::String { value: "hi".to_string() }],
+                        arguments: vec![JSItem::Ex {
+                            expression: Box::new(Expression::String {value: "hi".to_string()})
+                        }]
                     })
                 }],
             }),
@@ -149,7 +157,9 @@ fn test_const_function_declaration() {
                             object: Box::new(Expression::Identifier { name: "console".to_string() }),
                             property: Box::new(Expression::Identifier { name: "log".to_string() }),
                         }),
-                        arguments: vec![Tok::String { value: "hi".to_string() }],
+                        arguments: vec![JSItem::Ex {
+                            expression: Box::new(Expression::String {value: "hi".to_string()})
+                        }]
                     })
                 }],
             }),

@@ -1,4 +1,4 @@
-use crate::parser::symbols::{Expression, Operator};
+use crate::parser::symbols::{Expression, Operator, JSItem};
 use crate::lexer::js_token::Tok;
 use crate::parser::symbols::Expression::Identifier;
 
@@ -153,7 +153,7 @@ pub(crate) fn combine_name(last_exp: Expression, name: String) -> Expression {
     return Expression::None;
 }
 
-pub(crate) fn combine_call(last_exp: Expression, params: Vec<Tok>) -> Expression {
+pub(crate) fn combine_call(last_exp: Expression, params: Vec<JSItem>) -> Expression {
     match last_exp {
         Expression::None => {
             return Expression::CallExpression {
@@ -243,6 +243,13 @@ pub(crate) fn combine_float(last_exp: Expression, f_value: f64) -> Expression {
 
 pub(crate) fn combine_plus(last_exp: Expression) -> Expression {
     match last_exp {
+        Expression::Identifier {name} => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Add,
+                b: Box::new(Expression::Identifier {name})
+            }
+        }
         Expression::Number { value } => {
             return Expression::Binop {
                 a: Box::new(Expression::None),

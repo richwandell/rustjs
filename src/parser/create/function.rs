@@ -24,7 +24,9 @@ pub(crate) fn create_arrow_function(mut tokens: Vec<Tok>) -> JSItem {
         match tok {
             Tok::Rpar => {
                 stack.pop();
-                if !stack.is_empty() {
+                if stack.is_empty() {
+                    break;
+                } else {
                     function_args.push(Tok::Rpar);
                 }
             }
@@ -48,8 +50,10 @@ pub(crate) fn create_arrow_function(mut tokens: Vec<Tok>) -> JSItem {
         match tok {
             Tok::Rbrace => {
                 stack.pop();
-                if !stack.is_empty() {
-                    function_body.push(Tok::Rbrace);
+                if stack.is_empty() {
+                    break;
+                } else {
+                    function_body.push(Tok::Rpar);
                 }
             }
             Tok::Lbrace => {
