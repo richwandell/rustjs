@@ -101,7 +101,8 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     return j;
                 }
             }
-        } else if prev_type == "star" {
+        }
+        else if prev_type == "star" {
             match token {
                 Tok::Float { value: _ } => {
                     prev_type = "float";
@@ -120,7 +121,8 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     return j;
                 }
             }
-        } else if prev_type == "bslash" {
+        }
+        else if prev_type == "bslash" {
             match token {
                 Tok::Name { name: _ } => {
                     prev_type = "name";
@@ -134,25 +136,8 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     return j;
                 }
             }
-        } else if prev_type == "plus" {
-            match token {
-                Tok::Float { value: _ } => {
-                    prev_type = "float";
-                    j += 1;
-                }
-                Tok::Name { name: _ } => {
-                    prev_type = "name";
-                    j += 1;
-                }
-                Tok::Lpar => {
-                    prev_type = "lpar";
-                    j += 1;
-                }
-                _ => {
-                    return j;
-                }
-            }
-        } else if prev_type == "minus" {
+        }
+        else if prev_type == "plus" {
             match token {
                 Tok::Float { value: _ } => {
                     prev_type = "float";
@@ -170,7 +155,56 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     return j;
                 }
             }
-        } else if prev_type == "name" {
+        }
+        else if prev_type == "plus_plus" {
+            match token {
+                Tok::Semi => {
+                    return j;
+                }
+                _ => {
+                    return j;
+                }
+            }
+        }
+        else if prev_type == "less" {
+            match token {
+                Tok::Float {value: _} =>{
+                    prev_type = "float";
+                    j += 1;
+                }
+                Tok::Name {name:_}=>{
+                    prev_type = "name";
+                    j += 1;
+                }
+                Tok::Lpar=>{
+                    prev_type = "lpar";
+                    j += 1;
+                }
+                _ => {
+                    return j;
+                }
+            }
+        }
+        else if prev_type == "minus" {
+            match token {
+                Tok::Float { value: _ } => {
+                    prev_type = "float";
+                    j += 1;
+                }
+                Tok::Name { name: _ } => {
+                    prev_type = "name";
+                    j += 1;
+                }
+                Tok::Lpar => {
+                    prev_type = "lpar";
+                    j += 1;
+                }
+                _ => {
+                    return j;
+                }
+            }
+        }
+        else if prev_type == "name" {
             match token {
                 Tok::Lpar => {
                     prev_type = "lpar";
@@ -188,11 +222,20 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     prev_type = "plus_equal";
                     j += 1;
                 }
+                Tok::Less => {
+                    prev_type = "less";
+                    j += 1;
+                }
+                Tok::PlusPlus => {
+                    prev_type = "plus_plus";
+                    j += 1;
+                }
                 _ => {
                     return j;
                 }
             }
-        } else if prev_type == "dot" {
+        }
+        else if prev_type == "dot" {
             match token {
                 Tok::Name { name: _ } => {
                     prev_type = "name";
@@ -202,11 +245,13 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     return j;
                 }
             }
-        } else if prev_type == "lpar" {
+        }
+        else if prev_type == "lpar" {
             let k = find_matching_paren(j - 1, tokens);
             j = k + 1;
             prev_type = "rpar";
-        } else if prev_type == "rpar" {
+        }
+        else if prev_type == "rpar" {
             match token {
                 Tok::Lpar => {
                     let k = find_matching_paren(j - 1, tokens);
@@ -239,7 +284,8 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     return j;
                 }
             }
-        } else if prev_type == "string" {
+        }
+        else if prev_type == "string" {
             match token {
                 Tok::Semi | Tok::EndOfLine => {
                     return j;
@@ -248,7 +294,8 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     j += 1;
                 }
             }
-        } else {
+        }
+        else {
             j += 1;
         }
     }

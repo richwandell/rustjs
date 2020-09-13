@@ -37,6 +37,9 @@ pub(crate) enum Expression {
     },
     SubExpression {
        expression: Box<Expression>
+    },
+    UpdateExpression {
+        expression: Box<Expression>
     }
 }
 
@@ -56,6 +59,7 @@ pub(crate) enum Operator {
     BitXor, //
     BitAnd,
     FloorDiv,
+    Less, // <
 }
 
 #[allow(dead_code)]
@@ -105,6 +109,12 @@ pub(crate) enum Statement {
     AssignFunction {
         mutable: bool,
         function: Box<Statement>
+    },
+    ForStatement {
+        init: JSItem,
+        test: JSItem,
+        update: JSItem,
+        body: Vec<JSItem>
     }
 }
 

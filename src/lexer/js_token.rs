@@ -65,6 +65,7 @@ pub(crate) enum Tok {
     Comma, // ,
     Semi, // ;
     Plus, // +
+    PlusPlus, // ++
     Minus, // -
     Star, // *
     Slash, // \

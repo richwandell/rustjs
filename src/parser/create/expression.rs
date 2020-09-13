@@ -1,6 +1,6 @@
 use crate::lexer::js_token::Tok;
-use crate::parser::symbols::{JSItem, Statement, Expression};
-use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus, combine_float, combine_dot, combine_name, combine_string, combine_call, combine_expression};
+use crate::parser::symbols::{JSItem, Statement, Expression, Operator};
+use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus, combine_float, combine_dot, combine_name, combine_string, combine_call, combine_expression, combine_less};
 
 pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> JSItem {
     tokens.reverse();
@@ -39,6 +39,12 @@ pub(crate) fn create_expression(mut tokens: Vec<Tok>) -> JSItem {
     while tokens.len() > 0 {
         let token = tokens.pop().unwrap();
         match token {
+            Tok::PlusPlus => {
+                let exp = Expression::UpdateExpression {
+                    expression: Box::new(Expression::None),
+                };
+                expression_stack.push(exp);
+            }
             Tok::Star => {
                 let ex = expression_stack.pop().unwrap();
                 let exp = combine_star(ex);
@@ -57,6 +63,11 @@ pub(crate) fn create_expression(mut tokens: Vec<Tok>) -> JSItem {
             Tok::Minus => {
                 let ex = expression_stack.pop().unwrap_or(Expression::None);
                 let exp = combine_minus(ex);
+                expression_stack.push(exp);
+            }
+            Tok::Less => {
+                let ex = expression_stack.pop().unwrap_or(Expression::None);
+                let exp = combine_less(ex);
                 expression_stack.push(exp);
             }
             Tok::Float { value } => {

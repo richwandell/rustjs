@@ -9,7 +9,7 @@ fn test_for() {
     let mut lex = Lexer::new();
     let tokens = lex.lex(file.unwrap());
 
-    assert_eq!(tokens.len(), 26);
+    assert_eq!(tokens.len(), 25);
     let expected = vec![
         Tok::For,
         Tok::Lpar,
@@ -23,8 +23,7 @@ fn test_for() {
         Tok::Float {value: 10.},
         Tok::Semi,
         Tok::Name {name: "i".to_string()},
-        Tok::Plus,
-        Tok::Plus,
+        Tok::PlusPlus,
         Tok::Rpar,
         Tok::Lbrace,
         Tok::EndOfLine,

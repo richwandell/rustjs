@@ -73,6 +73,29 @@ pub(crate) fn combine_dot(last_exp: Expression, tok: Tok) -> Expression {
 
 pub(crate) fn combine_name(last_exp: Expression, name: String) -> Expression {
     match last_exp {
+        Expression::UpdateExpression {expression} => {
+            match *expression {
+                Expression::None => {
+                    return Expression::UpdateExpression {
+                        expression: Box::from(Expression::Identifier {name})
+                    }
+                }
+                _ => {}
+            }
+        }
+        Expression::Binop {a, op, b} => {
+            match op {
+                Operator::Add | Operator::Sub | Operator::Mult | Operator::Div | Operator::Less => {
+                    let new_a = combine_name(*a, name);
+                    return Expression::Binop {
+                        a: Box::from(new_a),
+                        op,
+                        b,
+                    };
+                }
+                _ => {}
+            }
+        }
         Expression::CallExpression { callee, arguments } => {
             match *callee {
                 Expression::None => {
@@ -199,15 +222,7 @@ pub(crate) fn combine_float(last_exp: Expression, f_value: f64) -> Expression {
     match last_exp {
         Expression::Binop { a, op, b } => {
             match op {
-                Operator::Add | Operator::Sub => {
-                    let new_a = combine_float(*a, f_value);
-                    return Expression::Binop {
-                        a: Box::from(new_a),
-                        op,
-                        b,
-                    };
-                }
-                Operator::Div | Operator::Mult => {
+                Operator::Add | Operator::Sub | Operator::Div | Operator::Mult | Operator::Less => {
                     let new_a = combine_float(*a, f_value);
                     return Expression::Binop {
                         a: Box::from(new_a),
@@ -308,6 +323,58 @@ pub(crate) fn combine_minus(last_exp: Expression) -> Expression {
             return Expression::Binop {
                 a: Box::new(Expression::None),
                 op: Operator::Sub,
+                b: Box::new(Expression::SubExpression { expression }),
+            };
+        }
+        _ => {}
+    }
+    return Expression::None;
+}
+
+pub(crate) fn combine_less(last_exp: Expression) -> Expression {
+    match last_exp {
+        Expression::Identifier {name} => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Less,
+                b: Box::new(Expression::Identifier {name}),
+            };
+        }
+        Expression::Number { value } => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Less,
+                b: Box::new(Expression::Number { value }),
+            };
+        }
+        Expression::Binop { a, op, b } => {
+            match op {
+                Operator::Less => {
+                    let new_exp = combine_less(*a);
+                    return Expression::Binop {
+                        a: Box::from(new_exp),
+                        op,
+                        b,
+                    };
+                }
+                Operator::Div => {
+                    return Expression::Binop {
+                        a: Box::from(Expression::None),
+                        op: Operator::Less,
+                        b: Box::from(Expression::Binop {
+                            a,
+                            op,
+                            b,
+                        }),
+                    };
+                }
+                _ => {}
+            }
+        }
+        Expression::SubExpression { expression } => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Less,
                 b: Box::new(Expression::SubExpression { expression }),
             };
         }

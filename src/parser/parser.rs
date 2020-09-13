@@ -1,14 +1,12 @@
 use crate::lexer::js_token::Tok;
-use crate::parser::symbols::{Expression, Statement, JSItem};
-use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus,
-                             combine_float, combine_dot, combine_name, combine_string,
-                             combine_call, combine_expression};
-use crate::parser::find::function::{find_function_assignment, find_arrow_function};
+use crate::parser::symbols::{Expression, JSItem};
 use crate::parser::find::assignment::find_end_of_assignment;
-use crate::parser::find::matching::{find_matching_paren, find_matching_brace};
+use crate::parser::find::matching::{find_matching_brace};
 use crate::parser::find::expression::find_end_of_expression;
 use crate::parser::create::function::{create_function, create_arrow_function, create_function_assignment};
 use crate::parser::create::expression::{create_expression, create_assignment_expression};
+use crate::parser::find::for_statement::find_end_of_for;
+use crate::parser::create::for_statement::create_for_statement;
 
 pub(crate) struct Parser {
     pub ast_tree: Vec<Expression>,
@@ -40,9 +38,7 @@ pub(crate) enum AssignmentType {
     },
 }
 
-// fn find_end_of_for() {
-//
-// }
+
 
 impl Parser {
     pub fn parse(&mut self, tokens: Vec<Tok>) -> Vec<JSItem> {
@@ -64,9 +60,18 @@ impl Parser {
         while i < tokens.len() - 1 {
             let token = tokens.get(i).unwrap();
             match token {
-                // Tok::For {
-                //     let j = find_end_of_for(i, &tokens);
-                // }
+                Tok::For => {
+                    let result = find_end_of_for(i, &tokens);
+                    match result {
+                        Ok(j) => {
+                            let t = tokens[i..=j].to_vec();
+                            let f = create_for_statement(t);
+                            js_items.push(f);
+                            i = j;
+                        }
+                        Err(_) => {}
+                    }
+                }
                 Tok::Float { value: _ } => {
                     let j = find_end_of_expression(i, &tokens, "float");
                     let t = tokens[i..=j].to_vec();

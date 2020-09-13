@@ -1,7 +1,7 @@
 use crate::lexer::lexer::Lexer;
 use std::fs;
 use crate::parser::parser::Parser;
-use crate::parser::symbols::{Expression, Statement};
+use crate::parser::symbols::{Expression, Statement, Operator};
 use crate::parser::symbols::JSItem;
 use crate::lexer::js_token::Tok;
 
@@ -17,18 +17,35 @@ fn test_for() {
     assert_eq!(js_items.len(), 1);
     let function = js_items.get(0).unwrap();
     assert!(function.eq(&JSItem::St {
-        statement: Box::new(Statement::FunctionDef {
-            name: "f".to_string(),
-            params: vec![],
+        statement: Box::new(Statement::ForStatement {
+            init: JSItem::St {
+                statement: Box::new(Statement::AssignExpression {
+                    mutable: true,
+                    name: "i".to_string(),
+                    value: Box::new(Expression::Number {value: 0.})
+                })
+            },
+            test: JSItem::Ex {
+                expression: Box::new(Expression::Binop {
+                    a: Box::new(Expression::Identifier {name: "i".to_string()}),
+                    op: Operator::Less,
+                    b: Box::new(Expression::Number {value: 10.})
+                })
+            },
+            update: JSItem::Ex {
+                expression: Box::new(Expression::UpdateExpression {
+                    expression: Box::new(Expression::Identifier {name: "i".to_string()})
+                })
+            },
             body: vec![JSItem::Ex {
                 expression: Box::new(Expression::CallExpression {
                     callee: Box::new(Expression::MemberExpression {
                         object: Box::new(Expression::Identifier { name: "console".to_string() }),
-                        property: Box::new(Expression::Identifier { name: "log".to_string() }),
+                        property: Box::new(Expression::Identifier {name: "log".to_string()})
                     }),
-                    arguments: vec![Tok::String { value: "hi".to_string() }],
+                    arguments: vec![Tok::Name {name: "i".to_string()}]
                 })
-            }],
+            }]
         })
     }))
 }

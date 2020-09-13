@@ -162,3 +162,77 @@ fn test_add_sub() {
     }))
 }
 
+#[test]
+fn test_identifier_less_number() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("a < 1"));
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+    let expression = js_items.get(0).unwrap();
+
+    assert!(expression.eq(&JSItem::Ex {
+        expression: Box::new(Expression::Binop {
+            a: Box::new(Expression::Identifier {name: "a".to_string()}),
+            op: Operator::Less,
+            b: Box::new(Expression::Number {value: 1. })
+        })
+    }))
+}
+
+#[test]
+fn test_number_less_number() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("2 < 1"));
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+    let expression = js_items.get(0).unwrap();
+
+    assert!(expression.eq(&JSItem::Ex {
+        expression: Box::new(Expression::Binop {
+            a: Box::new(Expression::Number {value: 2.}),
+            op: Operator::Less,
+            b: Box::new(Expression::Number {value: 1. })
+        })
+    }))
+}
+
+#[test]
+fn test_number_less_identifier() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("2 < a"));
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+    let expression = js_items.get(0).unwrap();
+
+    assert!(expression.eq(&JSItem::Ex {
+        expression: Box::new(Expression::Binop {
+            a: Box::new(Expression::Number {value: 2.}),
+            op: Operator::Less,
+            b: Box::new(Expression::Identifier {name: "a".to_string()})
+        })
+    }))
+}
+
+#[test]
+fn test_identifier_plus_plus() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("a++"));
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+    let expression = js_items.get(0).unwrap();
+
+    assert!(expression.eq(&JSItem::Ex {
+        expression: Box::new(Expression::UpdateExpression {
+            expression: Box::new(Expression::Identifier {name: "a".to_string()})
+        })
+    }))
+}
+

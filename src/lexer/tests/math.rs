@@ -212,3 +212,34 @@ fn test_bitwise() {
 
     assert!(tokens.eq(&expected));
 }
+
+#[test]
+fn test_number_less_identifier() {
+
+    let mut lex = Lexer::new();
+    let tokens = lex.lex("2 < a".to_string());
+
+    assert_eq!(tokens.len(), 3);
+    let expected = vec![
+        Tok::Float {value: 2.},
+        Tok::Less,
+        Tok::Name {name: "a".to_string()}
+    ];
+
+    assert!(tokens.eq(&expected));
+}
+
+#[test]
+fn test_number_plus_plus() {
+
+    let mut lex = Lexer::new();
+    let tokens = lex.lex("2++".to_string());
+
+    assert_eq!(tokens.len(), 2);
+    let expected = vec![
+        Tok::Float {value: 2.},
+        Tok::PlusPlus
+    ];
+
+    assert!(tokens.eq(&expected));
+}
