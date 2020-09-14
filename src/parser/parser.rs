@@ -41,7 +41,11 @@ pub(crate) enum AssignmentType {
 
 
 impl Parser {
-    pub fn parse(&mut self, tokens: Vec<Tok>) -> Vec<JSItem> {
+    pub fn parse(&mut self, mut tokens: Vec<Tok>) -> Vec<JSItem> {
+        if tokens.get(0).unwrap().eq(&Tok::EndOfLine) {
+            tokens.remove(0);
+        }
+
         if tokens.len() == 1 {
             let token = tokens.get(0).unwrap();
             match token {

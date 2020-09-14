@@ -71,6 +71,7 @@ pub(crate) enum Tok {
     Slash, // \
     Bslash, // /
     BslashEqual, // /=
+    BslashBslash, // //
     Vbar,  // '|'
     Amper, // '&'
     Less, // <

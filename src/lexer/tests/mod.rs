@@ -6,6 +6,7 @@ mod if_statement;
 mod math;
 mod one_liners;
 mod for_statements;
+mod arrays;
 
 #[test]
 fn test_iterator() {

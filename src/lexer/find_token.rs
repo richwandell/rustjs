@@ -356,7 +356,18 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                 }
 
                 if ch == '\r' || ch == '\n' {
-                    return find_end_of_line(it);
+                    let result = find_end_of_line(it);
+                    match result {
+                        Ok(mut tokens) => {
+                            if word.len() > 0 {
+                                tokens.insert(0, Tok::Name {name: String::from(&word)});
+                            }
+                            return Ok(tokens)
+                        }
+                        Err(e) => {
+                            return Err(e)
+                        }
+                    }
                 }
 
                 if ch == '>' || ch == '<' {

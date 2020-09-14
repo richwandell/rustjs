@@ -165,7 +165,8 @@ impl Lexer {
                 Tok::RightShiftUnsignedEqual => println!("{}", "RightShiftUnsignedEqual"),
                 Tok::EndOfLine => println!("{}", "EndOfLine"),
                 Tok::BslashEqual => println!("{}", "BslashEqual"),
-                Tok::PlusPlus => println!("{}", "PlusPlus")
+                Tok::PlusPlus => println!("{}", "PlusPlus"),
+                Tok::BslashBslash => println!("{}", "BslashBslash")
             }
         }
     }

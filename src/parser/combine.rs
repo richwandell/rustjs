@@ -4,6 +4,14 @@ use crate::parser::symbols::Expression::Identifier;
 
 pub(crate) fn combine_string(last_exp: Expression, value: String) -> Expression {
     match last_exp {
+        Expression::Binop { a, op, b } => {
+            let new_a = combine_string(*a, value);
+            return Expression::Binop {
+                a: Box::from(new_a),
+                op,
+                b
+            }
+        }
         Expression::None => {
             return Expression::Literal { value };
         }
@@ -243,6 +251,13 @@ pub(crate) fn combine_float(last_exp: Expression, f_value: f64) -> Expression {
 
 pub(crate) fn combine_plus(last_exp: Expression) -> Expression {
     match last_exp {
+        Expression::Literal {value} => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Add,
+                b: Box::new(Expression::Literal {value})
+            }
+        }
         Expression::Identifier {name} => {
             return Expression::Binop {
                 a: Box::new(Expression::None),
@@ -454,6 +469,23 @@ pub(crate) fn combine_expression(last_exp: Expression, next_expression: Expressi
         }
         Expression::None => {
             return Expression::SubExpression { expression: Box::new(next_expression) };
+        }
+        _ => {}
+    }
+    return Expression::None;
+}
+
+pub(crate) fn combine_array(last_exp: Expression, items: Vec<JSItem>) -> Expression {
+    match last_exp {
+        Expression::Binop { a, op, b } => {
+            return Expression::Binop {
+                a: Box::new(Expression::ArrayExpression { items }),
+                op,
+                b,
+            };
+        }
+        Expression::None => {
+            return Expression::ArrayExpression { items };
         }
         _ => {}
     }

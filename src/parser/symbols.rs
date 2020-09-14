@@ -40,6 +40,9 @@ pub(crate) enum Expression {
     },
     UpdateExpression {
         expression: Box<Expression>
+    },
+    ArrayExpression {
+        items: Vec<JSItem>
     }
 }
 

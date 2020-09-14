@@ -1,6 +1,6 @@
 use crate::lexer::js_token::Tok;
 use crate::parser::symbols::{JSItem, Statement, Expression, AssignOp};
-use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus, combine_float, combine_dot, combine_name, combine_string, combine_call, combine_expression, combine_less};
+use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus, combine_float, combine_dot, combine_name, combine_string, combine_call, combine_expression, combine_less, combine_array};
 use crate::parser::parser::Parser;
 
 pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> JSItem {
@@ -140,6 +140,35 @@ pub(crate) fn create_expression(mut tokens: Vec<Tok>) -> JSItem {
             }
             Tok::Semi | Tok::EndOfLine => {}
             Tok::Comma => {}
+            Tok::Rsqb => {
+                let mut sqb_content = vec![];
+                let mut sqb_stack = vec![];
+                sqb_stack.push("]");
+                while tokens.len() > 0 {
+                    let token = tokens.pop().unwrap();
+                    match token {
+                        Tok::Rsqb => {
+                            sqb_stack.push("]");
+                            sqb_content.push(token);
+                        }
+                        Tok::Lsqb => {
+                            sqb_stack.pop();
+                            if sqb_stack.is_empty() {
+                                break;
+                            } else {
+                                sqb_content.push(token);
+                            }
+                        }
+                        _ => {
+                            sqb_content.push(token);
+                        }
+                    }
+                }
+                let elements = parse_parameters(sqb_content);
+                let ex = expression_stack.pop().unwrap_or(Expression::None);
+                let exp = combine_array(ex, elements);
+                expression_stack.push(exp);
+            }
             Tok::Rpar => {
                 let mut parens_content = vec![];
                 let mut parens_stack = vec![];
@@ -164,11 +193,7 @@ pub(crate) fn create_expression(mut tokens: Vec<Tok>) -> JSItem {
                         }
                     }
                 }
-
-
-
                 let ex = expression_stack.pop().unwrap_or(Expression::None);
-
                 if !tokens.is_empty() {
                     let next = tokens.pop().unwrap();
                     match next {

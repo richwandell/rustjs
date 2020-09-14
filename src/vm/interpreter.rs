@@ -130,7 +130,8 @@ impl Interpreter {
         for i in (0..=self.scope).rev() {
             let objects = self.scopes.get_mut(i).unwrap();
             let object = objects.get(name);
-            if let Some(object) = object {
+            #[allow(unused_variables)]
+            if let Some(obj) = object {
                 return Ok(i);
             }
         }

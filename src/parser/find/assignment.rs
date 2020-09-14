@@ -40,6 +40,11 @@ pub(crate) fn find_end_of_assignment(start: usize, tokens: &Vec<Tok>) -> Result<
                     current_type = "expression";
                     j = k;
                 }
+                Tok::Lsqb => {
+                    let k = find_end_of_expression(j + 2, tokens, "lsqb");
+                    current_type = "expression";
+                    j = k;
+                }
                 _ => {}
             }
         }

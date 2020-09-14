@@ -1,5 +1,5 @@
 use crate::lexer::js_token::Tok;
-use crate::parser::find::matching::find_matching_paren;
+use crate::parser::find::matching::{find_matching_paren, find_matching_sqb};
 
 pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type: &str) -> usize {
     let mut j = start + 1;
@@ -151,6 +151,10 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     prev_type = "lpar";
                     j += 1;
                 }
+                Tok::String {value: _} => {
+                    prev_type = "string";
+                    j += 1;
+                }
                 _ => {
                     return j;
                 }
@@ -255,6 +259,11 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
             j = k + 1;
             prev_type = "rpar";
         }
+        else if prev_type == "lsqb" {
+            let k = find_matching_sqb(j - 1, tokens);
+            j = k + 1;
+            prev_type = "rsqb";
+        }
         else if prev_type == "rpar" {
             match token {
                 Tok::Lpar => {
@@ -291,6 +300,26 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
         }
         else if prev_type == "string" {
             match token {
+                Tok::Plus => {
+                    prev_type = "plus";
+                    j += 1;
+                }
+                Tok::Minus => {
+                    prev_type = "minus";
+                    j += 1;
+                }
+                Tok::Star => {
+                    prev_type = "star";
+                    j += 1;
+                }
+                Tok::Bslash => {
+                    prev_type = "bslash";
+                    j += 1;
+                }
+                Tok::BslashBslash => {
+                    prev_type = "bslash_bslash";
+                    j += 1;
+                }
                 Tok::Semi | Tok::EndOfLine => {
                     return j;
                 }

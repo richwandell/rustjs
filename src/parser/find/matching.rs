@@ -36,3 +36,22 @@ pub(crate) fn find_matching_brace(start: usize, tokens: &Vec<Tok>) -> usize {
     }
     return j;
 }
+
+pub(crate) fn find_matching_sqb(start: usize, tokens: &Vec<Tok>) -> usize {
+    let mut j = start;
+    let mut lsqb = 0;
+
+    while j < tokens.len() {
+        let token = tokens.get(j as usize).unwrap();
+        if token.eq(&Tok::Lsqb) {
+            lsqb += 1;
+        } else if token.eq(&Tok::Rsqb) {
+            lsqb -= 1;
+            if lsqb == 0 {
+                break;
+            }
+        }
+        j += 1;
+    }
+    return j;
+}
