@@ -371,6 +371,17 @@ pub(crate) fn combine_less(last_exp: Expression) -> Expression {
         }
         Expression::Binop { a, op, b } => {
             match op {
+                Operator::Add => {
+                    return Expression::Binop {
+                        a: Box::from(Expression::None),
+                        op: Operator::Less,
+                        b: Box::from(Expression::Binop {
+                            a,
+                            op,
+                            b
+                        })
+                    }
+                }
                 Operator::Less => {
                     let new_exp = combine_less(*a);
                     return Expression::Binop {
@@ -477,7 +488,7 @@ pub(crate) fn combine_expression(last_exp: Expression, next_expression: Expressi
 
 pub(crate) fn combine_array(last_exp: Expression, items: Vec<JSItem>) -> Expression {
     match last_exp {
-        Expression::Binop { a, op, b } => {
+        Expression::Binop { a:_, op, b } => {
             return Expression::Binop {
                 a: Box::new(Expression::ArrayExpression { items }),
                 op,

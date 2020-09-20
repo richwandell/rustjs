@@ -38,6 +38,7 @@ impl Lexer {
 
     pub fn lex(&mut self, file: String) -> Vec<Tok> {
         let mut it = StringIterator::new(file.chars());
+
         loop {
             let token = find_token(&mut it);
 

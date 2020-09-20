@@ -37,3 +37,14 @@ fn test_number_array() {
         })
     }))
 }
+
+#[test]
+fn test_array_object_apply() {
+    let file = fs::read_to_string("js/arrays/array_object_apply.js");
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(file.unwrap());
+    let js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+}

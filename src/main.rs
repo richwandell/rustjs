@@ -19,9 +19,6 @@ fn main() {
         .author("Rich Wandell <richwandell@gmail.com>")
         .about("JavaScript Interpreter")
         .arg(Arg::with_name("file")
-            .short("f")
-            .long("file")
-            .value_name("FILE")
             .help("The JS file to run")
             .required(true))
         .get_matches();

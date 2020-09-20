@@ -291,6 +291,8 @@ fn find_end_of_line(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     return Ok(vec![Tok::EndOfLine])
 }
 
+
+
 pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> {
     let mut word = String::from("");
 
@@ -339,6 +341,9 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                     }
                     if word == "if" {
                         return find_if(it);
+                    }
+                    if word == "null" {
+                        return Ok(vec![Tok::Null]);
                     }
                     return Ok(vec![Tok::Name { name: word }]);
                 }
@@ -446,6 +451,9 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                 }
 
                 if ch == ',' {
+                    if word == "null" {
+                        return Ok(vec![Tok::Null, Tok::Comma]);
+                    }
                     if word.len() > 0 {
                         return Ok(vec![Tok::Name {name: word}, Tok::Comma]);
                     }
