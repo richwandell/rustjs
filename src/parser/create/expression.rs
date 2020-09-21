@@ -2,6 +2,7 @@ use crate::lexer::js_token::Tok;
 use crate::parser::symbols::{JSItem, Statement, Expression, AssignOp};
 use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus, combine_float, combine_dot, combine_name, combine_string, combine_call, combine_expression, combine_less, combine_array};
 use crate::parser::parser::Parser;
+use crate::parser::create::comma_separate_tokens;
 
 pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> JSItem {
     tokens.reverse();
@@ -41,35 +42,7 @@ pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> JSItem {
 }
 
 fn parse_parameters(mut tokens: Vec<Tok>) -> Vec<JSItem> {
-    let mut stack = vec![];
-    let mut current_param = vec![];
-    let mut all_params = vec![];
-    while tokens.len() > 0 {
-        let tok = tokens.pop().unwrap();
-        match tok {
-            Tok::Lsqb | Tok::Lbrace | Tok::Lpar => {
-                stack.push(".");
-                current_param.push(tok);
-            }
-            Tok::Rbrace | Tok::Rsqb | Tok::Rpar => {
-                stack.pop();
-                current_param.push(tok);
-            }
-            Tok::Comma => {
-                if stack.len() == 0 {
-                    all_params.push(current_param.clone());
-                    current_param = vec![];
-                }
-            }
-            _ => {
-                current_param.push(tok);
-            }
-        }
-    }
-    if current_param.len() > 0 {
-        all_params.push(current_param)
-    }
-
+    let mut all_params = comma_separate_tokens(tokens);
     let mut exp_params = vec![];
 
     for p in all_params {

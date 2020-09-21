@@ -1,7 +1,7 @@
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
 use crate::vm::interpreter::Interpreter;
-use crate::vm::js_output::JSOutput;
+use crate::parser::symbols::JSItem;
 
 #[test]
 fn test_simple_add() {
@@ -12,7 +12,7 @@ fn test_simple_add() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 6.});
+    assert_eq!(out, JSItem::Number {value: 6.});
 }
 
 #[test]
@@ -24,7 +24,7 @@ fn test_simple_sub() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 1.});
+    assert_eq!(out, JSItem::Number {value: 1.});
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn test_simple_mul() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 6.});
+    assert_eq!(out, JSItem::Number {value: 6.});
 }
 
 #[test]
@@ -48,7 +48,7 @@ fn test_simple_div() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 1.5});
+    assert_eq!(out, JSItem::Number {value: 1.5});
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn test_add_sub() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 4.});
+    assert_eq!(out, JSItem::Number {value: 4.});
 }
 
 #[test]
@@ -72,7 +72,7 @@ fn test_add_sub_expression() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 4.});
+    assert_eq!(out, JSItem::Number {value: 4.});
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn test_sub_add_expression() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 0.});
+    assert_eq!(out, JSItem::Number {value: 0.});
 }
 
 #[test]
@@ -96,7 +96,7 @@ fn test_add_mul() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 9.});
+    assert_eq!(out, JSItem::Number {value: 9.});
 }
 
 #[test]
@@ -108,7 +108,7 @@ fn test_mul_add() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 9.});
+    assert_eq!(out, JSItem::Number {value: 9.});
 }
 
 #[test]
@@ -120,7 +120,7 @@ fn test_mul_add_expression() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 15.});
+    assert_eq!(out, JSItem::Number {value: 15.});
 }
 
 #[test]
@@ -132,5 +132,5 @@ fn test_mul_expression_add() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Number {value: 9.});
+    assert_eq!(out, JSItem::Number {value: 9.});
 }

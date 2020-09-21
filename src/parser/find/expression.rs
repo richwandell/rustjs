@@ -272,7 +272,16 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     prev_type = "rpar";
                 }
                 Tok::EndOfLine => {
-                    return j - 1;
+                    if tokens.len() > j {
+                        if let Tok::Dot = tokens.get(j + 1).unwrap() {
+                            j += 2;
+                            prev_type = "dot";
+                        } else {
+                            return j - 1;
+                        }
+                    } else {
+                        return j - 1;
+                    }
                 }
                 Tok::Dot => {
                     prev_type = "dot";

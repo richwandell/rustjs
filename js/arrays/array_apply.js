@@ -1,0 +1,1 @@
+Array.apply(null, {length: 5});

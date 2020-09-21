@@ -1,31 +1,31 @@
-use crate::vm::js_output::JSOutput;
+use crate::parser::symbols::JSItem;
 
 
-pub(crate) fn bin_add(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
+pub(crate) fn bin_add(a: JSItem, b: JSItem) -> Result<JSItem, ()> {
     match a {
-        JSOutput::Number { value: v1 } => {
+        JSItem::Number { value: v1 } => {
             match b {
-                JSOutput::Number { value: v2 } => {
-                    Ok(JSOutput::Number { value: v1 + v2 })
+                JSItem::Number { value: v2 } => {
+                    Ok(JSItem::Number { value: v1 + v2 })
                 }
-                JSOutput::String {value: v2} => {
+                JSItem::String {value: v2} => {
                     let mut value = v1.to_string();
                     value.push_str(&v2);
-                    Ok(JSOutput::String {value})
+                    Ok(JSItem::String {value})
                 }
                 _ => Err(())
             }
         }
-        JSOutput::String {value: mut v1 } =>{
+        JSItem::String {value: mut v1 } =>{
             match b {
-                JSOutput::Number {value: v2} => {
+                JSItem::Number {value: v2} => {
                     let value = v2.to_string();
                     v1.push_str(&value);
-                    Ok(JSOutput::String {value: v1})
+                    Ok(JSItem::String {value: v1})
                 }
-                JSOutput::String {value: v2} => {
+                JSItem::String {value: v2} => {
                     v1.push_str(&v2);
-                    Ok(JSOutput::String {value: v1})
+                    Ok(JSItem::String {value: v1})
                 }
                 _ => Err(())
             }
@@ -34,12 +34,12 @@ pub(crate) fn bin_add(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
     }
 }
 
-pub(crate) fn bin_sub(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
+pub(crate) fn bin_sub(a: JSItem, b: JSItem) -> Result<JSItem, ()> {
     match a {
-        JSOutput::Number { value: v1 } => {
+        JSItem::Number { value: v1 } => {
             match b {
-                JSOutput::Number { value: v2 } => {
-                    Ok(JSOutput::Number { value: v1 - v2 })
+                JSItem::Number { value: v2 } => {
+                    Ok(JSItem::Number { value: v1 - v2 })
                 }
                 _ => Err(())
             }
@@ -48,12 +48,12 @@ pub(crate) fn bin_sub(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
     }
 }
 
-pub(crate) fn bin_mul(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
+pub(crate) fn bin_mul(a: JSItem, b: JSItem) -> Result<JSItem, ()> {
     match a {
-        JSOutput::Number { value: v1 } => {
+        JSItem::Number { value: v1 } => {
             match b {
-                JSOutput::Number { value: v2 } => {
-                    Ok(JSOutput::Number { value: v1 * v2 })
+                JSItem::Number { value: v2 } => {
+                    Ok(JSItem::Number { value: v1 * v2 })
                 }
                 _ => Err(())
             }
@@ -62,12 +62,12 @@ pub(crate) fn bin_mul(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
     }
 }
 
-pub(crate) fn bin_div(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
+pub(crate) fn bin_div(a: JSItem, b: JSItem) -> Result<JSItem, ()> {
     match a {
-        JSOutput::Number { value: v1 } => {
+        JSItem::Number { value: v1 } => {
             match b {
-                JSOutput::Number { value: v2 } => {
-                    Ok(JSOutput::Number { value: v1 / v2 })
+                JSItem::Number { value: v2 } => {
+                    Ok(JSItem::Number { value: v1 / v2 })
                 }
                 _ => Err(())
             }
@@ -76,12 +76,12 @@ pub(crate) fn bin_div(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
     }
 }
 
-pub(crate) fn bin_less(a: JSOutput, b: JSOutput) -> Result<JSOutput, ()> {
+pub(crate) fn bin_less(a: JSItem, b: JSItem) -> Result<JSItem, ()> {
     match a {
-        JSOutput::Number { value: v1 } => {
+        JSItem::Number { value: v1 } => {
             match b {
-                JSOutput::Number { value: v2 } => {
-                    Ok(JSOutput::Bool { value: v1 < v2 })
+                JSItem::Number { value: v2 } => {
+                    Ok(JSItem::Bool { value: v1 < v2 })
                 }
                 _ => Err(())
             }

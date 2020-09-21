@@ -1,6 +1,7 @@
 use crate::lexer::js_token::Tok;
-use crate::parser::symbols::{JSItem, Statement};
+use crate::parser::symbols::{JSItem, Statement, Expression};
 use crate::parser::parser::Parser;
+
 
 pub(crate) fn create_arrow_function(mut tokens: Vec<Tok>) -> JSItem {
     tokens.reverse();
@@ -233,5 +234,64 @@ pub(crate) fn create_function(mut tokens: Vec<Tok>) -> JSItem {
         body: out,
     });
     let item = JSItem::St { statement };
+    return item;
+}
+
+pub(crate) fn create_function_expression(mut tokens: Vec<Tok>) -> JSItem {
+    tokens.reverse();
+
+    //get rid of function
+    tokens.pop();
+
+    let mut function_args = vec![];
+    let mut stack = vec![];
+    stack.push(tokens.pop().unwrap());
+    while !stack.is_empty() {
+        let tok = tokens.pop().unwrap();
+        match tok {
+            Tok::Rpar => {
+                stack.pop();
+                if !stack.is_empty() {
+                    function_args.push(Tok::Rpar);
+                }
+            }
+            Tok::Lpar => {
+                stack.push(Tok::Lpar);
+                function_args.push(Tok::Lpar);
+            }
+            _ => {
+                function_args.push(tok)
+            }
+        }
+    }
+
+    let mut function_body = vec![];
+    stack.push(tokens.pop().unwrap());
+    while !stack.is_empty() {
+        let tok = tokens.pop().unwrap();
+        match tok {
+            Tok::Rbrace => {
+                stack.pop();
+                if !stack.is_empty() {
+                    function_body.push(Tok::Rbrace);
+                }
+            }
+            Tok::Lbrace => {
+                stack.push(Tok::Lbrace);
+                function_body.push(Tok::Lbrace);
+            }
+            _ => {
+                function_body.push(tok)
+            }
+        }
+    }
+
+    let mut p = Parser::new();
+    let out = p.parse(function_body);
+    let expression = Box::new(Expression::FuncEx{
+        params: function_args,
+        body: out
+    });
+    let item = JSItem::Ex { expression };
     return item;
 }

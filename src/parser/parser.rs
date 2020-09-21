@@ -1,12 +1,14 @@
 use crate::lexer::js_token::Tok;
-use crate::parser::symbols::{Expression, JSItem};
+use crate::parser::symbols::{Expression, JSItem, Statement};
 use crate::parser::find::assignment::find_end_of_assignment;
 use crate::parser::find::matching::{find_matching_brace};
 use crate::parser::find::expression::find_end_of_expression;
-use crate::parser::create::function::{create_function, create_arrow_function, create_function_assignment};
+use crate::parser::create::function::{create_function, create_arrow_function, create_function_assignment, create_function_expression};
 use crate::parser::create::expression::{create_expression, create_assignment_expression};
 use crate::parser::find::for_statement::find_end_of_for;
 use crate::parser::create::for_statement::create_for_statement;
+use crate::parser::find::function::find_end_of_function;
+use crate::parser::create::block_statement::create_object_expression;
 
 pub(crate) struct Parser {
     pub ast_tree: Vec<Expression>,
@@ -38,6 +40,16 @@ pub(crate) enum AssignmentType {
     },
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub(crate) enum FunctionType {
+    FunctionExpression {
+        end: usize
+    },
+    FunctionDeclaration {
+        end: usize
+    }
+}
+
 
 
 impl Parser {
@@ -49,6 +61,11 @@ impl Parser {
         if tokens.len() == 1 {
             let token = tokens.get(0).unwrap();
             match token {
+                Tok::Null => {
+                    return vec![JSItem::Ex {
+                        expression: Box::new(Expression::Null)
+                    }]
+                }
                 Tok::Float { mut value } => {
                     return vec![JSItem::Ex {
                         expression: Box::new(Expression::Number { value })
@@ -132,13 +149,45 @@ impl Parser {
                     js_items.push(ex);
                     i = j;
                 }
+                Tok::Lbrace => {
+                    let j = find_matching_brace(i, &tokens);
+                    let t = tokens[i..=j].to_vec();
+                    let st = create_object_expression(t).unwrap();
+                    js_items.push(st);
+                    i = j;
+                }
                 Tok::Function => {
                     //function
-                    let j = find_matching_brace(i + 1, &tokens);
-                    let t = tokens[i..=j].to_vec();
-                    let func = create_function(t);
-                    js_items.push(func);
-                    i = j;
+                    let function_type = find_end_of_function(i, &tokens).unwrap();
+                    match function_type {
+                        FunctionType::FunctionDeclaration { end } => {
+                            let t = tokens[i..=end].to_vec();
+                            let func = create_function(t);
+                            js_items.push(func);
+                            i = end;
+                        }
+                        FunctionType::FunctionExpression {end} => {
+                            let t = tokens[i..=end].to_vec();
+                            let func = create_function_expression(t);
+                            js_items.push(func);
+                            i = end;
+                        }
+                    }
+                }
+                Tok::Return => {
+                    let t = tokens[i+1..=tokens.len() - 1].to_vec();
+                    let mut p = Parser::new();
+                    let mut items = p.parse(t);
+                    let return_item = items.remove(0);
+                    js_items.push(JSItem::St {
+                        statement: Box::from(Statement::Return{
+                            value: Box::new(return_item)
+                        })
+                    });
+                    for item in items {
+                        js_items.push(item);
+                    }
+                    return js_items;
                 }
                 _ => {
                     i += 1;

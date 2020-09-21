@@ -9,7 +9,7 @@ use crate::lexer::lexer::Lexer;
 use clap::{App, Arg};
 use crate::parser::parser::Parser;
 use crate::vm::interpreter::Interpreter;
-use crate::vm::js_output::JSOutput;
+use crate::parser::symbols::JSItem;
 
 extern crate clap;
 
@@ -37,7 +37,7 @@ fn main() {
             for item in js_items {
                 let out = int.interpret(item);
                 match out {
-                    JSOutput::Null => {}
+                    JSItem::Null => {}
                     _ => println!("{}", out)
                 }
             }

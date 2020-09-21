@@ -1,7 +1,6 @@
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
 use crate::vm::interpreter::Interpreter;
-use crate::vm::js_output::JSOutput;
 use crate::parser::symbols::JSItem;
 
 #[test]
@@ -13,7 +12,7 @@ fn test_simple_cdl() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSOutput::Null);
+    assert_eq!(out, JSItem::Null);
     let captured = int.captured_output;
     assert!(captured.eq(&vec![vec![JSItem::String {value: String::from("hi")}]]))
 }

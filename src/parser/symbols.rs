@@ -43,7 +43,11 @@ pub(crate) enum Expression {
     },
     ArrayExpression {
         items: Vec<JSItem>
-    }
+    },
+    FuncEx {
+        params: Vec<Tok>,
+        body: Vec<JSItem>
+    },
 }
 
 /// An operator for a binary operation (an operation with two operands).
@@ -83,7 +87,9 @@ pub(crate) enum Statement {
 
     Continue,
 
-    Return { value: Option<Expression> },
+    Return {
+        value: Box<JSItem>
+    },
 
     AssignExpression {
         assign_op: AssignOp,
@@ -121,6 +127,7 @@ pub(crate) enum Statement {
         mutable: bool,
         function: Box<Statement>
     },
+
     ForStatement {
         init: JSItem,
         test: JSItem,
@@ -131,12 +138,19 @@ pub(crate) enum Statement {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum StdFun {
-    ConsoleLog
+    ConsoleLog,
+    ObjectKeys,
+    FunctionApply,
+    ArrayMap,
+    ArrayConstructor
 }
 
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum JSItem {
+    ObjectReference {
+        path: Vec<String>
+    },
     Bool {
         value: bool
     },
@@ -168,6 +182,11 @@ pub(crate) enum JSItem {
         properties: HashMap<String, JSItem>
     },
 
+    Array {
+        items: Vec<JSItem>,
+        length: usize
+    },
+
     Variable {
         mutable: bool,
         value: Expression
@@ -186,7 +205,11 @@ impl Display for JSItem {
         match self {
             JSItem::Std { params: _, func } => {
                 match func {
-                    StdFun::ConsoleLog => write!(f, "f log(){{ [native code] }}")
+                    StdFun::ConsoleLog => write!(f, "f log(){{ [native code] }}"),
+                    StdFun::ObjectKeys => write!(f, "f keys(){{ [native code] }}"),
+                    StdFun::FunctionApply => write!(f, "f apply(){{ [native code] }}"),
+                    StdFun::ArrayMap => write!(f, "f map(){{ [native code] }}"),
+                    StdFun::ArrayConstructor => write!(f, "f Array(){{ [native code] }}")
                 }
             }
             JSItem::St { statement:_ } => {

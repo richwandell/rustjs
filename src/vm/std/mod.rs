@@ -1,40 +1,24 @@
-use crate::parser::symbols::{JSItem, StdFun};
 use std::collections::HashMap;
-use crate::lexer::js_token::Tok;
-use std::fmt::{Display, Formatter, Result};
 
-struct LogVec(Vec<JSItem>);
+use crate::parser::symbols::JSItem;
+use crate::vm::std::array::create_array;
+use crate::vm::std::console::create_console;
+use crate::vm::std::function::create_function;
+use crate::vm::std::object::create_object;
 
-impl Display for LogVec {
-    #[allow(unused_must_use)]
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        for item in &self.0 {
-            write!(f, "{} ", item);
-        }
-        Ok(())
-    }
-}
-
-pub(crate) fn std_log(params: Vec<JSItem>) {
-    let log_vec = LogVec(params);
-    println!("{}", log_vec);
-}
-
-pub(crate) fn create_console() -> JSItem {
-    let mut p = HashMap::new();
-    let log = JSItem::Std {
-        params: vec![Tok::Name {name: "item".to_string()}],
-        func: StdFun::ConsoleLog
-    };
-    p.insert("log".to_string(), log);
-    JSItem::Object {
-        mutable: false,
-        properties: p
-    }
-}
+mod object;
+mod array;
+pub(crate) mod function;
+mod inherit;
+pub(crate) mod console;
 
 pub(crate) fn create_std_objects() -> HashMap<String, JSItem> {
     let mut f = HashMap::new();
-    f.insert("console".to_string(), create_console());
+
+    f = create_object(f);
+    f = create_console(f);
+    f = create_function(f);
+    f = create_array(f);
+
     return f;
 }
