@@ -1,7 +1,7 @@
 use crate::lexer::js_token::Tok;
 use crate::parser::parser::{AssignmentType, SyntaxError};
 use crate::parser::find::function::{find_arrow_function, find_function_assignment};
-use crate::parser::find::matching::find_matching_paren;
+use crate::parser::find::matching::{find_matching_paren, find_matching_brace};
 use crate::parser::find::expression::find_end_of_expression;
 
 pub(crate) fn find_end_of_assignment(start: usize, tokens: &Vec<Tok>) -> Result<AssignmentType, SyntaxError> {
@@ -44,6 +44,16 @@ pub(crate) fn find_end_of_assignment(start: usize, tokens: &Vec<Tok>) -> Result<
                     let k = find_end_of_expression(j + 2, tokens, "lsqb");
                     current_type = "expression";
                     j = k;
+                }
+                Tok::Lbrace => {
+                    let k = find_matching_brace(j + 2, tokens);
+                    current_type = "rbrace";
+                    j = k + 1;
+                    if j < tokens.len() - 1 {
+                        if let Tok::Semi = tokens.get(j).unwrap() {
+                            return Ok(AssignmentType::ObjectExpression {end: j - 1});
+                        }
+                    }
                 }
                 _ => {}
             }

@@ -1,6 +1,6 @@
 use crate::lexer::js_token::Tok;
 use crate::parser::symbols::{Expression, JSItem, Statement};
-use crate::parser::find::assignment::find_end_of_assignment;
+use crate::parser::find::assignment::{find_end_of_assignment};
 use crate::parser::find::matching::{find_matching_brace};
 use crate::parser::find::expression::find_end_of_expression;
 use crate::parser::create::function::{create_function, create_arrow_function, create_function_assignment, create_function_expression};
@@ -38,6 +38,9 @@ pub(crate) enum AssignmentType {
     Expression {
         end: usize
     },
+    ObjectExpression {
+        end: usize
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -122,7 +125,7 @@ impl Parser {
                         }
                         AssignmentType::Expression { end } => {
                             let t = tokens[i..=end].to_vec();
-                            let ex = create_assignment_expression(t);
+                            let ex = create_assignment_expression(t).unwrap();
                             js_items.push(ex);
                             i = end;
                         }
@@ -132,14 +135,29 @@ impl Parser {
                             js_items.push(assign);
                             i = end;
                         }
+                        AssignmentType::ObjectExpression {end} => {
+                            let t = tokens[i..=end].to_vec();
+                            let exr = create_assignment_expression(t).unwrap();
+                            js_items.push(exr);
+                            i = end;
+                        }
                     }
                 }
                 Tok::Name { name: _ } => {
                     //expression
+
                     let j = find_end_of_expression(i, &tokens, "name");
                     let t = tokens[i..=j].to_vec();
-                    let ex = create_expression(t);
-                    js_items.push(ex);
+                    let exr = create_assignment_expression(t.clone());
+                    match exr {
+                        Ok(ex) => {
+                            js_items.push(ex);
+                        }
+                        Err(..) => {
+                            let ex = create_expression(t);
+                            js_items.push(ex);
+                        }
+                    }
                     i = j;
                 }
                 Tok::Lpar => {

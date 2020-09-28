@@ -5,6 +5,7 @@ use crate::parser::symbols::{Expression, Statement, Operator, AssignOp};
 use crate::parser::symbols::JSItem;
 use crate::lexer::js_token::Tok;
 use std::collections::HashMap;
+use crate::parser::symbols::JSItem::Ex;
 
 #[test]
 fn test_number_array() {
@@ -17,10 +18,10 @@ fn test_number_array() {
     assert_eq!(js_items.len(), 1);
     let function = js_items.get(0).unwrap();
     assert!(function.eq(&JSItem::St {
-        statement: Box::new(Statement::AssignExpression {
-            assign_op: AssignOp::Let,
-            name: "a".to_string(),
-            value: Box::new(Expression::ArrayExpression {
+        statement: Box::new(Statement::AssignmentExpression {
+            operator: AssignOp::Let,
+            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "a".to_string()})},
+            right: JSItem::Ex {expression: Box::new(Expression::ArrayExpression {
                 items: vec![
                     JSItem::Ex { expression: Box::new(Expression::Number {value: 1.}) },
                     JSItem::Ex { expression: Box::new(Expression::Number {value: 2.}) },
@@ -34,7 +35,7 @@ fn test_number_array() {
                     JSItem::Ex { expression: Box::new(Expression::Number {value: 10.}) },
                     JSItem::Ex { expression: Box::new(Expression::Number {value: 11.}) }
                 ]
-            })
+            })}
         })
     }))
 }
@@ -53,10 +54,10 @@ fn test_array_object_apply() {
         expression: Box::from(Expression::Number {value: 50.})
     });
     assert!(object.eq(&JSItem::St {
-        statement: Box::new(Statement::AssignExpression {
-            assign_op: AssignOp::Const,
-            name: "real_numbers".to_string(),
-            value: Box::new(Expression::CallExpression {
+        statement: Box::new(Statement::AssignmentExpression {
+            operator: AssignOp::Const,
+            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "real_numbers".to_string()})},
+            right: JSItem::Ex {expression: Box::new(Expression::CallExpression {
                 callee: Box::new(Expression::MemberExpression {
                     object: Box::new(Expression::CallExpression {
                         callee: Box::new(Expression::MemberExpression {
@@ -85,7 +86,7 @@ fn test_array_object_apply() {
                         }]
                     })
                 }]
-            })
+            })}
         })
     }));
 }

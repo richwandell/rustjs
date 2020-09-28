@@ -2,6 +2,8 @@ use crate::parser::symbols::{JSItem, StdFun};
 use std::fmt::{Display, Formatter, Result};
 use std::collections::HashMap;
 use crate::lexer::js_token::Tok;
+use crate::vm::interpreter::Interpreter;
+use crate::vm::scope::insert::set_object;
 
 struct LogVec(Vec<JSItem>);
 
@@ -20,16 +22,20 @@ pub(crate) fn std_log(params: Vec<JSItem>) {
     println!("{}", log_vec);
 }
 
-pub(crate) fn create_console(mut scope: HashMap<String, JSItem>) -> HashMap<String, JSItem> {
+pub(crate) fn create_console(mut int: Interpreter) -> Interpreter {
     let mut p = HashMap::new();
     let log = JSItem::Std {
         params: vec![Tok::Name {name: "objs".to_string()}],
         func: StdFun::ConsoleLog
     };
     p.insert("log".to_string(), log);
-    scope.insert("console".to_string(), JSItem::Object {
+
+    if let Ok(..) = set_object(&mut int, vec!["console".to_string()], JSItem::Object {
         mutable: false,
         properties: p
-    });
-    return scope;
+    }) {
+        return int;
+    }
+
+    return int;
 }

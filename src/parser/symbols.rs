@@ -5,6 +5,10 @@ use std::fmt::{Display, Formatter, Result};
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Expression {
+    Object {
+        mutable: bool,
+        properties: HashMap<String, JSItem>
+    },
     Binop {
         a: Box<Expression>,
         op: Operator,
@@ -74,7 +78,8 @@ pub(crate) enum Operator {
 pub(crate) enum AssignOp {
     Let,
     Const,
-    Var
+    Var,
+    None
 }
 
 #[allow(dead_code)]
@@ -91,10 +96,16 @@ pub(crate) enum Statement {
         value: Box<JSItem>
     },
 
-    AssignExpression {
+    AssignmentExpression {
+        operator: AssignOp,
+        left: JSItem,
+        right: JSItem
+    },
+
+    AssignObject {
         assign_op: AssignOp,
         name: String,
-        value: Box<Expression>,
+        value: JSItem
     },
 
     /// An expression used as a statement.
@@ -136,6 +147,7 @@ pub(crate) enum Statement {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum StdFun {
     ConsoleLog,

@@ -1,44 +1,77 @@
 use crate::lexer::js_token::Tok;
 use crate::parser::symbols::{JSItem, Statement, Expression, AssignOp};
 use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus, combine_float, combine_dot, combine_name, combine_string, combine_call, combine_expression, combine_less, combine_array};
-use crate::parser::parser::Parser;
+use crate::parser::parser::{Parser, SyntaxError};
 use crate::parser::create::comma_separate_tokens;
+use crate::parser::create::block_statement::create_object_expression;
 
-pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> JSItem {
+pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> Result<JSItem, SyntaxError> {
     tokens.reverse();
-    let assign_op_tok = tokens.pop().unwrap();
-    let mut assign_op = AssignOp::Let;
-    if assign_op_tok.eq(&Tok::Const) {
+    let mut left = vec![];
+    let mut right = vec![];
+
+    let mut found_equal = false;
+    while !tokens.is_empty() {
+        let tok = tokens.pop().unwrap();
+        if !found_equal && tok.eq(&Tok::Equal) {
+            found_equal = true;
+        } else if !found_equal {
+            left.push(tok);
+        } else {
+            right.push(tok);
+        }
+    }
+
+    if !found_equal {
+        return Err(SyntaxError::UnexpectedToken {tok: left.pop().unwrap()})
+    }
+
+    let mut assign_op = AssignOp::None;
+    if left.get(0).unwrap().eq(&Tok::Let) {
+        left.remove(0);
+        assign_op = AssignOp::Let;
+    } else if left.get(0).unwrap().eq(&Tok::Const) {
+        left.remove(0);
         assign_op = AssignOp::Const;
-    } else if assign_op_tok.eq(&Tok::Var) {
+    } else if left.get(0).unwrap().eq(&Tok::Var) {
+        left.remove(0);
         assign_op = AssignOp::Var;
     }
-    let mut variable_name = "".to_string();
-    match tokens.pop().unwrap() {
-        Tok::Name { name } => {
-            variable_name = String::from(name);
-        }
-        _ => {}
-    }
-    //get rid of equal
-    tokens.pop();
 
-    tokens.reverse();
-    let exp = create_expression(tokens);
-    match exp {
-        JSItem::Ex {expression} => {
-            return JSItem::St {
-                statement: Box::new(Statement::AssignExpression {
-                    assign_op,
-                    name: variable_name,
-                    value: expression
+    if let JSItem::Ex {expression: left_expression} = create_expression(left) {
+        let mut left ;
+        if let Expression::Identifier {name} = *left_expression {
+            left = Box::from(Expression::Literal {value: name});
+        } else {
+            left = left_expression;
+        }
+
+        if right.get(0).unwrap().eq(&Tok::Lbrace) && right.get(right.len() - 1).unwrap().eq(&Tok::Rbrace) {
+            if let Ok(item) = create_object_expression(right) {
+                if let JSItem::Object { mutable, properties } = item {
+                    return Ok(JSItem::St {
+                        statement: Box::new(Statement::AssignmentExpression {
+                            operator: assign_op,
+                            left: JSItem::Ex { expression: left },
+                            right: JSItem::Object {mutable, properties}
+                        })
+                    })
+                }
+            }
+        } else {
+            if let JSItem::Ex { expression: right_expression } = create_expression(right) {
+                return Ok(JSItem::St {
+                    statement: Box::new(Statement::AssignmentExpression {
+                        operator: assign_op,
+                        left: JSItem::Ex { expression: left },
+                        right: JSItem::Ex { expression: right_expression }
+                    })
                 })
             }
         }
-        _ => {
-            return JSItem::Ex {expression: Box::new(Expression::None)};
-        }
     }
+
+    return Ok(JSItem::Ex {expression: Box::new(Expression::None)})
 }
 
 fn parse_parameters(mut tokens: Vec<Tok>) -> Vec<JSItem> {

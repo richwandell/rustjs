@@ -1,7 +1,8 @@
-use std::collections::HashMap;
 use crate::parser::symbols::{JSItem, StdFun, Expression};
 use crate::lexer::js_token::Tok;
+use crate::vm::interpreter::Interpreter;
 use crate::vm::std::inherit::inherit;
+use crate::vm::scope::insert::set_object;
 
 pub(crate) fn array_constructor(mut arguments: Vec<JSItem>) -> Result<JSItem, ()> {
     let _this_arg = arguments.remove(0);
@@ -47,10 +48,13 @@ pub(crate) fn array_constructor(mut arguments: Vec<JSItem>) -> Result<JSItem, ()
     }
 }
 
-pub(crate) fn create_array(mut scope: HashMap<String, JSItem>) -> HashMap<String, JSItem> {
-    scope = inherit(scope, "Function".to_string(), "Array".to_string());
+pub(crate) fn create_array(mut int: Interpreter) -> Interpreter {
+    let or_path = vec!["Array".to_string()];
+    int = inherit(int, JSItem::ObjectReference {path: vec!["Function".to_string()]},
+                  JSItem::ObjectReference {path: or_path.clone()});
 
-    let mut func = scope.remove("Array").unwrap();
+
+    let mut func = int.scopes.get_mut(0).unwrap().remove("Array").unwrap();
     if let JSItem::Object { mutable: _, mut properties } = func {
         if let JSItem::Object { mutable: _, properties: mut prototype } = properties.remove("prototype").unwrap() {
 
@@ -74,11 +78,13 @@ pub(crate) fn create_array(mut scope: HashMap<String, JSItem>) -> HashMap<String
                 func: StdFun::ArrayConstructor
             });
 
-            scope.insert("Array".to_string(), JSItem::Object {
+            if let Ok(..) = set_object(&mut int, or_path.clone(), JSItem::Object {
                 mutable: false,
                 properties
-            });
+            }) {
+                return int;
+            }
         }
     }
-    return scope;
+    return int;
 }

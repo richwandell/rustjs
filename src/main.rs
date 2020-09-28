@@ -21,6 +21,10 @@ fn main() {
         .arg(Arg::with_name("file")
             .help("The JS file to run")
             .required(true))
+        .arg(Arg::with_name("expose-gc")
+            .help("Expose GP")
+            .long("expose-gc")
+            .required(false))
         .get_matches();
 
     let file_name = matches.value_of("file").unwrap();

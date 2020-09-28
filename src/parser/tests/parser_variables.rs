@@ -17,10 +17,10 @@ fn test_let_variable_declaration() {
     assert_eq!(js_items.len(), 1);
     let function = js_items.get(0).unwrap();
     assert!(function.eq(&JSItem::St {
-        statement: Box::new(Statement::AssignExpression {
-            assign_op: AssignOp::Let,
-            name: "a".to_string(),
-            value: Box::new(Expression::Literal { value: "hi".to_string() }),
+        statement: Box::new(Statement::AssignmentExpression {
+            operator: AssignOp::Let,
+            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "a".to_string()})},
+            right: JSItem::Ex {expression: Box::from(Expression::Literal { value: "hi".to_string() })}
         })
     }))
 }
@@ -37,10 +37,10 @@ fn test_let_variable_declaration_number() {
     assert_eq!(js_items.len(), 1);
     let function = js_items.get(0).unwrap();
     assert!(function.eq(&JSItem::St {
-        statement: Box::new(Statement::AssignExpression {
-            assign_op: AssignOp::Let,
-            name: "a".to_string(),
-            value: Box::new(Expression::Number { value: 123. }),
+        statement: Box::new(Statement::AssignmentExpression {
+            operator: AssignOp::Let,
+            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "a".to_string()})},
+            right: JSItem::Ex {expression: Box::from(Expression::Number { value: 123. })}
         })
     }))
 }
@@ -57,16 +57,16 @@ fn test_let_math_declaration() {
     assert_eq!(js_items.len(), 1);
     let function = js_items.get(0).unwrap();
     assert!(function.eq(&JSItem::St {
-        statement: Box::new(Statement::AssignExpression {
-            assign_op: AssignOp::Let,
-            name: "a".to_string(),
-            value: Box::new(Expression::SubExpression {
+        statement: Box::new(Statement::AssignmentExpression {
+            operator: AssignOp::Let,
+            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "a".to_string()})},
+            right: JSItem::Ex {expression: Box::new(Expression::SubExpression {
                 expression: Box::new(Expression::Binop {
                     a: Box::new(Expression::Number { value: 1. }),
                     op: Operator::Add,
                     b: Box::new(Expression::Number { value: 2. }),
                 })
-            }),
+            })}
         })
     }))
 }
@@ -83,10 +83,10 @@ fn test_let_math_declaration1() {
     assert_eq!(js_items.len(), 1);
     let function = js_items.get(0).unwrap();
     assert!(function.eq(&JSItem::St {
-        statement: Box::new(Statement::AssignExpression {
-            assign_op: AssignOp::Let,
-            name: "a".to_string(),
-            value: Box::new(Expression::Binop {
+        statement: Box::new(Statement::AssignmentExpression {
+            operator: AssignOp::Let,
+            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "a".to_string()})},
+            right: JSItem::Ex {expression: Box::new(Expression::Binop {
                 a: Box::new(Expression::Number { value: 1. }),
                 op: Operator::Add,
                 b: Box::new(Expression::Binop {
@@ -100,7 +100,7 @@ fn test_let_math_declaration1() {
                         })
                     })
                 }),
-            }),
+            })}
         })
     }))
 }
@@ -117,10 +117,10 @@ fn test_let_var_plus_var() {
     assert_eq!(js_items.len(), 1);
     let function = js_items.get(0).unwrap();
     assert!(function.eq(&JSItem::St {
-        statement: Box::new(Statement::AssignExpression {
-            assign_op: AssignOp::Let,
-            name: "a".to_string(),
-            value: Box::new(Expression::Binop {
+        statement: Box::new(Statement::AssignmentExpression {
+            operator: AssignOp::Let,
+            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "a".to_string()})},
+            right: JSItem::Ex {expression: Box::new(Expression::Binop {
                 a: Box::new(Expression::Number { value: 1. }),
                 op: Operator::Add,
                 b: Box::new(Expression::Binop {
@@ -134,7 +134,7 @@ fn test_let_var_plus_var() {
                         })
                     })
                 }),
-            }),
+            })}
         })
     }))
 }

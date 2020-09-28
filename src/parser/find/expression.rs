@@ -337,6 +337,20 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                 }
             }
         }
+        else if prev_type == "equal" {
+            match token {
+                Tok::String { ..} => {
+                    prev_type = "string";
+                    j += 1;
+                }
+                Tok::Semi => {
+                    return j;
+                }
+                _ => {
+                    return j;
+                }
+            }
+        }
         else {
             j += 1;
         }

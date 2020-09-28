@@ -14,15 +14,17 @@ fn test_for() {
     let tokens = lex.lex(file.unwrap());
     let js_items = parser.parse(tokens);
 
+
+
     assert_eq!(js_items.len(), 1);
     let function = js_items.get(0).unwrap();
     assert!(function.eq(&JSItem::St {
         statement: Box::new(Statement::ForStatement {
             init: JSItem::St {
-                statement: Box::new(Statement::AssignExpression {
-                    assign_op: AssignOp::Let,
-                    name: "i".to_string(),
-                    value: Box::new(Expression::Number {value: 0.})
+                statement: Box::new(Statement::AssignmentExpression {
+                    operator: AssignOp::Let,
+                    left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "i".to_string()})},
+                    right: JSItem::Ex {expression: Box::from(Expression::Number {value: 0.})}
                 })
             },
             test: JSItem::Ex {
@@ -66,10 +68,10 @@ fn test_for_test_ident() {
     assert!(function.eq(&JSItem::St {
         statement: Box::new(Statement::ForStatement {
             init: JSItem::St {
-                statement: Box::new(Statement::AssignExpression {
-                    assign_op: AssignOp::Let,
-                    name: "i".to_string(),
-                    value: Box::new(Expression::Number {value: 0.})
+                statement: Box::new(Statement::AssignmentExpression {
+                    operator: AssignOp::Let,
+                    left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "i".to_string()})},
+                    right: JSItem::Ex {expression: Box::from(Expression::Number {value: 0.})}
                 })
             },
             test: JSItem::Ex {
@@ -113,10 +115,10 @@ fn test_for_test_ident_plus_ident() {
     assert!(function.eq(&JSItem::St {
         statement: Box::new(Statement::ForStatement {
             init: JSItem::St {
-                statement: Box::new(Statement::AssignExpression {
-                    assign_op: AssignOp::Let,
-                    name: "j".to_string(),
-                    value: Box::new(Expression::Identifier {name: "a".to_string()})
+                statement: Box::new(Statement::AssignmentExpression {
+                    operator: AssignOp::Let,
+                    left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "j".to_string()})},
+                    right: JSItem::Ex {expression: Box::from(Expression::Identifier {name: "a".to_string()})}
                 })
             },
             test: JSItem::Ex {

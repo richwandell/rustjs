@@ -1,8 +1,9 @@
 use std::collections::HashMap;
-use crate::parser::symbols::{JSItem, StdFun};
-use crate::lexer::js_token::Tok;
+use crate::parser::symbols::{JSItem};
+use crate::vm::interpreter::Interpreter;
+use crate::vm::scope::insert::set_object;
 
-pub(crate) fn create_object(mut scope: HashMap<String, JSItem>) -> HashMap<String, JSItem> {
+pub(crate) fn create_object(mut int: Interpreter) -> Interpreter {
     let mut object_prototype = HashMap::new();
     object_prototype.insert("constructor".to_string(), JSItem::ObjectReference {path: vec!["Object".to_string()]});
 
@@ -12,14 +13,14 @@ pub(crate) fn create_object(mut scope: HashMap<String, JSItem>) -> HashMap<Strin
         properties: object_prototype
     });
 
-    object_properties.insert("keys".to_string(), JSItem::Std {
-        params: vec![Tok::Name { name: "object".to_string() }],
-        func: StdFun::ObjectKeys
-    });
+    object_properties.insert("__proto__".to_string(), JSItem::ObjectReference {path: vec!["Object".to_string()]});
 
-    scope.insert("Object".to_string(), JSItem::Object {
+    if let Ok(..) = set_object(&mut int, vec!["Object".to_string()], JSItem::Object {
         mutable: false,
         properties: object_properties
-    });
-    return scope;
+    }) {
+        return int;
+    }
+
+    return int;
 }
