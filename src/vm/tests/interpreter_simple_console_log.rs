@@ -12,7 +12,7 @@ fn test_simple_cdl() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSItem::Null);
+    assert_eq!(out, JSItem::Undefined);
     let captured = int.captured_output;
     assert!(captured.eq(&vec![vec![JSItem::String {value: String::from("hi")}]]))
 }

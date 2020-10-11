@@ -145,7 +145,6 @@ impl Parser {
                 }
                 Tok::Name { name: _ } => {
                     //expression
-
                     let j = find_end_of_expression(i, &tokens, "name");
                     let t = tokens[i..=j].to_vec();
                     let exr = create_assignment_expression(t.clone());

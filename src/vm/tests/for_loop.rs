@@ -16,7 +16,7 @@ fn test_simple_for() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSItem::Null);
+    assert_eq!(out, JSItem::Undefined);
     let captured = int.captured_output;
     assert_eq!(captured.len(), 10);
     assert!(captured.eq(&vec![
@@ -44,7 +44,7 @@ fn test_nested_for() {
 
     let mut int = Interpreter::new();
     let out = int.interpret(js_items.pop().unwrap());
-    assert_eq!(out, JSItem::Null);
+    assert_eq!(out, JSItem::Undefined);
     let captured = int.captured_output;
     assert_eq!(captured.len(), 25);
     assert!(captured.eq(&vec![
@@ -86,12 +86,12 @@ fn test_function_nested_for() {
     let mut js_items = parser.parse(tokens);
 
     let mut int = Interpreter::new();
-    let mut out = JSItem::Null;
+    let mut out = JSItem::Undefined;
     for item in js_items {
         out = int.interpret(item);
     }
 
-    assert_eq!(out, JSItem::Null);
+    assert_eq!(out, JSItem::Undefined);
     let captured = int.captured_output;
     assert_eq!(captured.len(), 25);
     assert!(captured.eq(&vec![
@@ -133,12 +133,12 @@ fn test_function_for_scope() {
     let mut js_items = parser.parse(tokens);
 
     let mut int = Interpreter::new();
-    let mut out = JSItem::Null;
+    let mut out = JSItem::Undefined;
     for item in js_items {
         out = int.interpret(item);
     }
 
-    assert_eq!(out, JSItem::Null);
+    assert_eq!(out, JSItem::Undefined);
     let captured = int.captured_output;
     assert_eq!(captured.len(), 25);
     assert!(captured.eq(&vec![

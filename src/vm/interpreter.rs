@@ -76,7 +76,7 @@ impl Interpreter {
                         let args = self.make_params(params_clone, arguments);
                         self.add_params_to_scope(args.0, args.1);
 
-                        let mut out = JSItem::Null;
+                        let mut out = JSItem::Undefined;
                         for item in body_clone {
                             out = self.interpret(item);
                         }
@@ -125,7 +125,7 @@ impl Interpreter {
         let args = self.make_params(params, arguments);
         self.add_params_to_scope(args.0, args.1);
 
-        let mut out = JSItem::Null;
+        let mut out = JSItem::Undefined;
         for item in body {
             out = self.interpret(item);
         }
@@ -142,11 +142,11 @@ impl Interpreter {
                 #[cfg(test)]{
                     self.captured_output.push(args.1 );
                     self.remove_current_scope();
-                    return Ok(JSItem::Null)
+                    return Ok(JSItem::Undefined)
                 }
                 std_log(args.1);
                 self.remove_current_scope();
-                return Ok(JSItem::Null)
+                return Ok(JSItem::Undefined)
             }
             StdFun::ObjectKeys => {
                 return Err(());
@@ -168,6 +168,17 @@ impl Interpreter {
         }
     }
 
+    fn call_func_ex(&mut self, ex: Expression, _this_arg: JSItem, arguments: Vec<JSItem>) -> Result<JSItem, ()> {
+        match ex {
+            Expression::FuncEx { params, body } => {
+                return self.call_function(params.clone(), arguments, body.clone());
+            }
+            _ => {
+                return Err(())
+            }
+        }
+    }
+
     fn call_object_reference(&mut self, this_arg: JSItem, reference: Vec<String>, arguments: Vec<JSItem>) -> Result<JSItem, ()> {
         let mut path = reference.clone();
         let function = find_object_from_reference(self, path.clone());
@@ -175,6 +186,9 @@ impl Interpreter {
         match function {
             Ok(function) => {
                 match function {
+                    JSItem::Ex {expression} => {
+                        return self.call_func_ex(*expression, this_arg, arguments);
+                    }
                     JSItem::ObjectReference { path } => {
                         return self.call_object_reference( this_arg, path, arguments);
                     }
@@ -221,7 +235,7 @@ impl Interpreter {
                 bin_less(self.visit_ex(a), self.visit_ex(b)).unwrap()
             }
             _ => {
-                JSItem::Null
+                JSItem::Undefined
             }
         }
     }
@@ -235,7 +249,7 @@ impl Interpreter {
                 self.call_identifier(name, arguments).unwrap()
             }
             _ => {
-                JSItem::Null
+                JSItem::Undefined
             }
         }
     }
@@ -287,7 +301,7 @@ impl Interpreter {
             },
             Err(_) => {}
         }
-        JSItem::Null
+        JSItem::Undefined
     }
 
     fn visit_ex_up(&mut self, ex: Box<Expression>) -> JSItem {
@@ -309,12 +323,24 @@ impl Interpreter {
                 }
             }
         }
-        JSItem::Null
+        JSItem::Undefined
     }
 
     fn visit_member_expression(&mut self, object: Box<Expression>, property: Box<Expression>) -> JSItem {
-        let left = find_reference_from_member_expression(Expression::MemberExpression {object, property});
-        JSItem::ObjectReference{path: left}
+        let object_out = self.visit_ex(object);
+        match object_out {
+            JSItem::Object { mutable:_, properties } => {
+                if let Expression::Identifier {name} = *property {
+                    if let Some(item) = properties.get(&name) {
+                        return self.visit(item.clone());
+                    }
+                }
+            }
+            _ => {
+                return JSItem::Undefined;
+            }
+        }
+        JSItem::Undefined
     }
 
     fn visit_ex(&mut self, ex: Box<Expression>) -> JSItem {
@@ -347,7 +373,7 @@ impl Interpreter {
                 JSItem::String {value}
             }
             _ => {
-                JSItem::Null
+                JSItem::Undefined
             }
         }
     }
@@ -383,7 +409,7 @@ impl Interpreter {
             self.visit(update.clone());
         }
         self.remove_current_scope();
-        JSItem::Null
+        JSItem::Undefined
     }
 
     fn declare_function_in_scope(&mut self, mutable: bool, name: String, params: Vec<Tok>, body: Vec<JSItem>) {
@@ -406,8 +432,11 @@ impl Interpreter {
 
     fn visit_st(&mut self, st: Box<Statement>) -> JSItem {
         match *st {
+            Statement::Return { value } => {
+                return self.visit(*value);
+            }
             Statement::AssignObject { .. } => {
-                JSItem::Null
+                JSItem::Undefined
             }
             Statement::ForStatement { init, test, update, body } => {
                 return self.visit_for_statement(init, test, update, body);
@@ -416,37 +445,37 @@ impl Interpreter {
                 match *function {
                     Statement::FunctionDef { name, params, body } => {
                         self.declare_function_in_scope(mutable, name, params, body);
-                        JSItem::Null
+                        JSItem::Undefined
                     }
                     _ => {
-                        JSItem::Null
+                        JSItem::Undefined
                     }
                 }
             }
             Statement::AssignmentExpression { operator, left, right } => {
-
-                let left_out = self.visit(left);
+                let mut path = vec![];
+                if let JSItem::Ex {expression} = left {
+                    if let Expression::MemberExpression { object, property } = *expression {
+                        path = find_reference_from_member_expression(Expression::MemberExpression {object, property})
+                    } else if let Expression::String {value} = *expression {
+                        path = vec![value];
+                    } else if let Expression::Literal {value} = *expression {
+                        path = vec![value];
+                    }
+                }
                 let right_out = self.visit(right);
                 let exp = o_to_v(right_out, operator);
 
-                match left_out {
-                    JSItem::ObjectReference {path} => {
-                        set_object(self, path, exp).unwrap_or(InsertResult::Success);
-                    }
-                    JSItem::String {value} => {
-                        set_object(self, vec![value], exp).unwrap_or(InsertResult::Success);
-                    }
-                    _ => {}
-                }
+                set_object(self, path, exp).unwrap_or(InsertResult::Success);
 
-                JSItem::Null
+                JSItem::Undefined
             }
             Statement::FunctionDef { name, params, body } => {
                 self.declare_function_in_scope(true, name, params, body);
-                JSItem::Null
+                JSItem::Undefined
             }
             _ => {
-                JSItem::Null
+                JSItem::Undefined
             }
         }
     }
@@ -463,7 +492,7 @@ impl Interpreter {
                 JSItem::Object {mutable, properties}
             }
             _ => {
-                JSItem::Null
+                JSItem::Undefined
             }
         }
     }

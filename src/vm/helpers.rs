@@ -71,6 +71,21 @@ pub(crate) fn find_o_r(interpreter: &Interpreter, mut scope_num: usize, mut path
     while !path.is_empty() {
         key = path.pop().unwrap();
         match current {
+            JSItem::Variable { mutable:_, value } => {
+                match value {
+                    Expression::Object { mutable:_, properties } => {
+                        let p_item = properties.get(&key);
+                        if let Some(item) = p_item {
+                            current = item;
+                        } else {
+                            return Err(())
+                        }
+                    }
+                    _ => {
+                        return Err(())
+                    }
+                }
+            }
             JSItem::ObjectReference { path: _ } => {
                 // path = new_path.clone();
                 // let scope_return = find_object_scope(&interpreter, new_path.get(0).unwrap()).unwrap();

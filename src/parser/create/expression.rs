@@ -46,6 +46,17 @@ pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> Result<JSIte
             left = left_expression;
         }
 
+        loop {
+            //get rid of EOL if it exists, we don't need it at this point.
+            if let Tok::EndOfLine = right.get(right.len() - 1).unwrap() {
+                right.pop();
+            }else if let Tok::Semi = right.get(right.len() - 1).unwrap() {
+                right.pop();
+            } else {
+                break;
+            }
+        }
+
         if right.get(0).unwrap().eq(&Tok::Lbrace) && right.get(right.len() - 1).unwrap().eq(&Tok::Rbrace) {
             if let Ok(item) = create_object_expression(right) {
                 if let JSItem::Object { mutable, properties } = item {

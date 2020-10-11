@@ -1,6 +1,5 @@
 use crate::parser::symbols::{Expression, Operator, JSItem};
 use crate::lexer::js_token::Tok;
-use crate::parser::symbols::Expression::Identifier;
 
 pub(crate) fn combine_string(last_exp: Expression, value: String) -> Expression {
     match last_exp {
@@ -57,6 +56,13 @@ pub(crate) fn combine_dot(last_exp: Expression, tok: Tok) -> Expression {
                     };
                 }
                 Expression::None => {}
+                Expression::CallExpression { callee, arguments } => {
+                    let new_object = combine_dot(Expression::CallExpression {callee, arguments}, tok);
+                    return Expression::MemberExpression {
+                        object: Box::new(new_object),
+                        property
+                    };
+                }
                 Expression::MemberExpression { object, property } => {
                     let new_object = combine_dot(*object, tok);
                     let new_expression = Expression::MemberExpression {
@@ -71,7 +77,7 @@ pub(crate) fn combine_dot(last_exp: Expression, tok: Tok) -> Expression {
         Expression::Identifier { name } => {
             return Expression::MemberExpression {
                 object: Box::new(Expression::None),
-                property: Box::new(Identifier { name }),
+                property: Box::new(Expression::Identifier { name }),
             };
         }
         _ => {}
@@ -129,7 +135,7 @@ pub(crate) fn combine_name(last_exp: Expression, name: String) -> Expression {
         Expression::Identifier { name } => {
             return Expression::MemberExpression {
                 object: Box::new(Expression::None),
-                property: Box::new(Identifier { name }),
+                property: Box::new(Expression::Identifier { name }),
             };
         }
         Expression::None => {
@@ -138,6 +144,15 @@ pub(crate) fn combine_name(last_exp: Expression, name: String) -> Expression {
         Expression::MemberExpression { object, property } => {
             let outer_property = property;
             match *object {
+                Expression::CallExpression { callee, arguments } => {
+                    return Expression::MemberExpression {
+                        object: Box::from(Expression::CallExpression {
+                            callee: Box::from(combine_name(*callee, name)),
+                            arguments
+                        }),
+                        property: outer_property
+                    };
+                }
                 Expression::None => {
                     return Expression::MemberExpression {
                         object: Box::from(combine_name(Expression::None, name)),
@@ -197,7 +212,7 @@ pub(crate) fn combine_call(last_exp: Expression, params: Vec<JSItem>) -> Express
         Expression::Identifier { name } => {
             return Expression::MemberExpression {
                 object: Box::new(Expression::None),
-                property: Box::new(Identifier { name }),
+                property: Box::new(Expression::Identifier { name }),
             };
         }
         Expression::MemberExpression { object, property } => {
