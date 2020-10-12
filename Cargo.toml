@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 clap = "~2.33.3"
+maplit = "1.0.2"
 
 [profile.dev]
 opt-level = 0

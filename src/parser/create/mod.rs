@@ -4,6 +4,7 @@ pub(crate) mod function;
 pub(crate) mod expression;
 pub(crate) mod for_statement;
 pub(crate) mod block_statement;
+pub(crate) mod array_expression;
 
 pub(crate) fn comma_separate_tokens(mut tokens: Vec<Tok>) -> Vec<Vec<Tok>> {
     let mut stack = vec![];

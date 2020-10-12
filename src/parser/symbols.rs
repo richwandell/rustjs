@@ -46,7 +46,8 @@ pub(crate) enum Expression {
         expression: Box<Expression>
     },
     ArrayExpression {
-        items: Vec<JSItem>
+        items: Vec<JSItem>,
+        properties: HashMap<String, JSItem>
     },
     FuncEx {
         params: Vec<Tok>,
@@ -154,7 +155,8 @@ pub(crate) enum StdFun {
     ObjectKeys,
     FunctionApply,
     ArrayMap,
-    ArrayConstructor
+    ArrayConstructor,
+    ArrayPush
 }
 
 #[allow(dead_code)]
@@ -196,7 +198,7 @@ pub(crate) enum JSItem {
 
     Array {
         items: Vec<JSItem>,
-        length: usize
+        properties: HashMap<String, JSItem>
     },
 
     Variable {
@@ -221,7 +223,8 @@ impl Display for JSItem {
                     StdFun::ObjectKeys => write!(f, "f keys(){{ [native code] }}"),
                     StdFun::FunctionApply => write!(f, "f apply(){{ [native code] }}"),
                     StdFun::ArrayMap => write!(f, "f map(){{ [native code] }}"),
-                    StdFun::ArrayConstructor => write!(f, "f Array(){{ [native code] }}")
+                    StdFun::ArrayConstructor => write!(f, "f Array(){{ [native code] }}"),
+                    StdFun::ArrayPush => write!(f, "f push(){{ [native code] }}")
                 }
             }
             JSItem::St { statement:_ } => {

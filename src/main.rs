@@ -12,6 +12,7 @@ use crate::vm::interpreter::Interpreter;
 use crate::parser::symbols::JSItem;
 
 extern crate clap;
+#[macro_use] extern crate maplit;
 
 fn main() {
     let matches = App::new("Rust JS")
@@ -41,7 +42,7 @@ fn main() {
             for item in js_items {
                 let out = int.interpret(item);
                 match out {
-                    JSItem::Null => {}
+                    JSItem::Null | JSItem::Undefined => {}
                     _ => println!("{}", out)
                 }
             }

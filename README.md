@@ -7,3 +7,9 @@ A toy JavaScript interpreter written in Rust.
 
   
 <img src="readme1.gif" />
+
+### TODO
+- [ ] Array pop
+- [ ] Array sort
+- [ ] Array concat
+- [ ] Array join

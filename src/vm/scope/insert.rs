@@ -77,6 +77,11 @@ fn insert_o_r(scopes: &mut Vec<HashMap<String, JSItem>>, mut path: Vec<String>, 
     let mut hashmap = scopes.get_mut(current_scope).unwrap();
     let mut item = hashmap.get_mut(&key);
 
+    if path.len() == 0 {
+        hashmap.insert(key, new_item);
+        return Ok(InsertResult::Success);
+    }
+
     match item {
         Some(i) => {
             match i {

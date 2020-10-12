@@ -4,6 +4,7 @@ use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine
 use crate::parser::parser::{Parser, SyntaxError};
 use crate::parser::create::comma_separate_tokens;
 use crate::parser::create::block_statement::create_object_expression;
+use crate::parser::create::array_expression::create_array_expression;
 
 pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> Result<JSItem, SyntaxError> {
     tokens.reverse();
@@ -64,7 +65,19 @@ pub(crate) fn create_assignment_expression(mut tokens: Vec<Tok>) -> Result<JSIte
                         statement: Box::new(Statement::AssignmentExpression {
                             operator: assign_op,
                             left: JSItem::Ex { expression: left },
-                            right: JSItem::Object {mutable, properties}
+                            right: JSItem::Object { mutable, properties }
+                        })
+                    })
+                }
+            }
+        } else if right.get(0).unwrap().eq(&Tok::Lsqb) && right.get(right.len() - 1).unwrap().eq(&Tok::Rsqb) {
+            if let Ok(item) = create_array_expression(right) {
+                if let JSItem::Ex { expression: right_expression } = item {
+                    return Ok(JSItem::St {
+                        statement: Box::new(Statement::AssignmentExpression {
+                            operator: assign_op,
+                            left: JSItem::Ex { expression: left },
+                            right: JSItem::Ex {expression: right_expression}
                         })
                     })
                 }
@@ -255,3 +268,4 @@ pub(crate) fn create_expression(mut tokens: Vec<Tok>) -> JSItem {
     let expression = Box::new(expression_stack.pop().unwrap());
     return JSItem::Ex { expression };
 }
+

@@ -210,6 +210,10 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
         }
         else if prev_type == "name" {
             match token {
+                Tok::Star => {
+                    prev_type = "star";
+                    j += 1;
+                }
                 Tok::Lpar => {
                     prev_type = "lpar";
                     j += 1;
@@ -339,6 +343,10 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
         }
         else if prev_type == "equal" {
             match token {
+                Tok::Name {..} => {
+                    prev_type = "name";
+                    j += 1;
+                }
                 Tok::String { ..} => {
                     prev_type = "string";
                     j += 1;

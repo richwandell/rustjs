@@ -1,19 +1,28 @@
-use crate::parser::symbols::JSItem;
 use crate::lexer::js_token::Tok;
+use crate::parser::symbols::{JSItem, Expression};
+use crate::parser::parser::{SyntaxError, Parser};
 use crate::parser::create::comma_separate_tokens;
-use crate::parser::parser::{Parser, SyntaxError};
-use std::collections::HashMap;
-use crate::parser::parser::SyntaxError::UnexpectedToken;
 
-pub(crate) fn create_object_expression(mut tokens: Vec<Tok>) -> Result<JSItem, SyntaxError> {
-    //get rid of braces
+pub(crate) fn create_array_expression(mut tokens: Vec<Tok>) -> Result<JSItem, SyntaxError> {
+    //get rid of lsqb
     tokens.remove(0);
+    //get rid of eol and semi if they are on the end
+    loop {
+        //get rid of EOL if it exists, we don't need it at this point.
+        if let Tok::EndOfLine = tokens.get(tokens.len() - 1).unwrap() {
+            tokens.pop();
+        } else if let Tok::Semi = tokens.get(tokens.len() - 1).unwrap() {
+            tokens.pop();
+        } else {
+            break;
+        }
+    }
+    //get rid of rsqb
     tokens.pop();
     tokens.reverse();
 
     let mut items = comma_separate_tokens(tokens);
-
-    let mut object = HashMap::new();
+    let mut array = vec![];
 
     for mut item in items {
         loop {
@@ -37,37 +46,17 @@ pub(crate) fn create_object_expression(mut tokens: Vec<Tok>) -> Result<JSItem, S
                 break;
             }
         }
-
-        let mut key ;
-        let tok = item.remove(0);
-        match tok {
-            Tok::Name {name} => {
-                key = name;
-            }
-            Tok::String {value} => {
-                key = value;
-            }
-            _ => {
-                return Err(SyntaxError::UnexpectedToken {tok})
-            }
-        }
-
-        //get rid of colon
-        let colon = item.remove(0);
-        match colon {
-            Tok::Colon => {},
-            _ => {
-                return Err(UnexpectedToken {tok: colon})
-            }
-        }
-
         let mut p = Parser::new();
         let mut value = p.parse(item);
-        object.insert(key, value.pop().unwrap());
+        array.push(value.pop().unwrap());
     }
-
-    Ok(JSItem::Object {
-        mutable: true,
-        properties: object
+    let len = JSItem::Number {value: array.len() as f64 };
+    Ok(JSItem::Ex {
+        expression: Box::new(Expression::ArrayExpression {
+            items: array,
+            properties: hashmap!{
+                "length".to_string() => len
+            }
+        })
     })
 }

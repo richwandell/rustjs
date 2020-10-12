@@ -2,25 +2,19 @@ use crate::parser::symbols::JSItem;
 use std::collections::HashMap;
 use crate::vm::interpreter::Interpreter;
 use crate::vm::helpers::{find_object_from_reference};
-use crate::vm::scope::insert::set_object;
 
-pub(crate) fn inherit(mut int: Interpreter, from: JSItem, to: JSItem) -> Interpreter {
+pub(crate) fn inherit(int: &Interpreter, from: JSItem, to: JSItem) -> JSItem {
 
     let mut new_prototype = HashMap::new();
     new_prototype.insert("constructor".to_string(), to.clone());
 
     let mut from_vec: Vec<String> = vec![];
-    let mut to_vec: Vec<String> = vec![];
     let mut from_vec_clone: Vec<String> = vec![];
     let mut from_clone: JSItem = from.clone();
 
     if let JSItem::ObjectReference { path } = from {
         from_vec = path;
         from_vec_clone = from_vec.clone();
-    }
-
-    if let JSItem::ObjectReference { path } = to {
-        to_vec = path;
     }
 
     if let Ok(object_ref) = find_object_from_reference(&int, from_vec) {
@@ -73,17 +67,10 @@ pub(crate) fn inherit(mut int: Interpreter, from: JSItem, to: JSItem) -> Interpr
 
         new_properties.insert("__proto__".to_string(), from_clone);
 
-        if let Ok(..) = set_object(&mut int, to_vec.clone(), JSItem::Object {
+        return JSItem::Object {
             mutable: false,
             properties: new_properties
-        }) {
-            return int;
-        }
-
-        return int;
+        };
     }
-
-
-
-    int
+    return JSItem::Undefined
 }

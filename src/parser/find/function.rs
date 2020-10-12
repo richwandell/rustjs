@@ -1,5 +1,5 @@
 use crate::lexer::js_token::Tok;
-use crate::parser::find::matching::{find_matching_paren, find_matching_brace};
+use crate::parser::find::matching::{find_matching_paren, find_matching_brace, find_matching_sqb};
 use crate::parser::parser::{FunctionType, SyntaxError};
 
 pub(crate) fn find_arrow_function(start: usize, tokens: &Vec<Tok>) -> usize {
@@ -132,6 +132,36 @@ pub(crate) fn find_object_assignment(start: usize, tokens: &Vec<Tok>) -> usize {
                                     let j = find_matching_brace(start + 3, tokens);
                                     match tokens.get(j).unwrap() {
                                         Tok::Rbrace => {
+                                            j
+                                        }
+                                        _ => start
+                                    }
+                                }
+                                _ => start
+                            }
+                        }
+                        _ => start
+                    }
+                }
+                _ => start
+            }
+        }
+        _ => start
+    }
+}
+
+pub(crate) fn find_array_assignment(start: usize, tokens: &Vec<Tok>) -> usize {
+    return match tokens.get(start).unwrap() {
+        Tok::Let | Tok::Const | Tok::Var => {
+            match tokens.get(start + 1).unwrap() {
+                Tok::Name { name: _ } => {
+                    match tokens.get(start + 2).unwrap() {
+                        Tok::Equal => {
+                            match tokens.get(start + 3).unwrap() {
+                                Tok::Lsqb => {
+                                    let j = find_matching_sqb(start + 3, tokens);
+                                    match tokens.get(j).unwrap() {
+                                        Tok::Rsqb => {
                                             j
                                         }
                                         _ => start

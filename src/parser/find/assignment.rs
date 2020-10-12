@@ -1,6 +1,6 @@
 use crate::lexer::js_token::Tok;
 use crate::parser::parser::{AssignmentType, SyntaxError};
-use crate::parser::find::function::{find_arrow_function, find_function_assignment, find_object_assignment};
+use crate::parser::find::function::{find_arrow_function, find_function_assignment, find_object_assignment, find_array_assignment};
 use crate::parser::find::matching::{find_matching_paren, find_matching_brace};
 use crate::parser::find::expression::find_end_of_expression;
 
@@ -23,44 +23,50 @@ pub(crate) fn find_end_of_assignment(start: usize, tokens: &Vec<Tok>) -> Result<
                 j = object_assignment + 1;
                 current_type = "object_assignment";
             } else {
-                let token = tokens.get(j + 2 as usize).unwrap();
-                match token {
-                    Tok::Float { value: _ } => {
-                        let k = find_end_of_expression(j + 2, tokens, "float");
-                        current_type = "expression";
-                        j = k;
-                    }
-                    Tok::String { value: _ } => {
-                        let k = find_end_of_expression(j + 2, tokens, "string");
-                        current_type = "expression";
-                        j = k;
-                    }
-                    Tok::Name { name: _ } => {
-                        let k = find_end_of_expression(j + 2, tokens, "name");
-                        current_type = "expression";
-                        j = k;
-                    }
-                    Tok::Lpar => {
-                        let k = find_end_of_expression(j + 2, tokens, "lpar");
-                        current_type = "expression";
-                        j = k;
-                    }
-                    Tok::Lsqb => {
-                        let k = find_end_of_expression(j + 2, tokens, "lsqb");
-                        current_type = "expression";
-                        j = k;
-                    }
-                    Tok::Lbrace => {
-                        let k = find_matching_brace(j + 2, tokens);
-                        current_type = "rbrace";
-                        j = k + 1;
-                        if j < tokens.len() - 1 {
-                            if let Tok::Semi = tokens.get(j).unwrap() {
-                                return Ok(AssignmentType::ObjectExpression { end: j - 1 });
+                let array_assignment = find_array_assignment(start, tokens);
+                if array_assignment > start {
+                    j = array_assignment + 1;
+                    current_type = "array_assignment";
+                } else {
+                    let token = tokens.get(j + 2 as usize).unwrap();
+                    match token {
+                        Tok::Float { value: _ } => {
+                            let k = find_end_of_expression(j + 2, tokens, "float");
+                            current_type = "expression";
+                            j = k;
+                        }
+                        Tok::String { value: _ } => {
+                            let k = find_end_of_expression(j + 2, tokens, "string");
+                            current_type = "expression";
+                            j = k;
+                        }
+                        Tok::Name { name: _ } => {
+                            let k = find_end_of_expression(j + 2, tokens, "name");
+                            current_type = "expression";
+                            j = k;
+                        }
+                        Tok::Lpar => {
+                            let k = find_end_of_expression(j + 2, tokens, "lpar");
+                            current_type = "expression";
+                            j = k;
+                        }
+                        Tok::Lsqb => {
+                            let k = find_end_of_expression(j + 2, tokens, "lsqb");
+                            current_type = "expression";
+                            j = k;
+                        }
+                        Tok::Lbrace => {
+                            let k = find_matching_brace(j + 2, tokens);
+                            current_type = "rbrace";
+                            j = k + 1;
+                            if j < tokens.len() - 1 {
+                                if let Tok::Semi = tokens.get(j).unwrap() {
+                                    return Ok(AssignmentType::ObjectExpression { end: j - 1 });
+                                }
                             }
                         }
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
         }
@@ -195,6 +201,24 @@ pub(crate) fn find_end_of_assignment(start: usize, tokens: &Vec<Tok>) -> Result<
                 }
                 Tok::Semi => {
                     return Ok(AssignmentType::ObjectExpression {end: j});
+                }
+                _ => {
+                    return Err(SyntaxError::UnexpectedToken {tok: token.clone()});
+                }
+            }
+        }
+        else if current_type == "array_assignment" {
+            match token {
+                Tok::EndOfLine => {
+                    if let Tok::Dot = tokens.get(j + 1 as usize).unwrap() {
+                        j = j + 2;
+                        current_type = "dot";
+                    } else {
+                        return Ok(AssignmentType::ArrayAssignment {end: j});
+                    }
+                }
+                Tok::Semi => {
+                    return Ok(AssignmentType::ArrayAssignment {end: j});
                 }
                 _ => {
                     return Err(SyntaxError::UnexpectedToken {tok: token.clone()});

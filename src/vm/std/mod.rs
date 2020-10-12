@@ -5,9 +5,9 @@ use crate::vm::interpreter::Interpreter;
 use crate::vm::std::console::create_console;
 
 mod object;
-mod array;
+pub(crate) mod array;
 pub(crate) mod function;
-mod inherit;
+pub(crate) mod inherit;
 pub(crate) mod console;
 
 pub(crate) fn create_std_objects(mut int: Interpreter) -> Interpreter {

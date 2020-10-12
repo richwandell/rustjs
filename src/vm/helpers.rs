@@ -7,6 +7,12 @@ pub(crate) fn o_to_v(js_out: JSItem, assign_op: AssignOp) -> JSItem {
         mutable = true;
     }
     return match js_out {
+        JSItem::Array { items, properties } => {
+            JSItem::Variable {
+                mutable,
+                value: Expression::ArrayExpression {items, properties}
+            }
+        }
         JSItem::Object { mutable, properties } => {
             JSItem::Variable {
                 mutable,
@@ -79,6 +85,33 @@ pub(crate) fn find_o_r(interpreter: &Interpreter, mut scope_num: usize, mut path
                             current = item;
                         } else {
                             return Err(())
+                        }
+                    }
+                    Expression::ArrayExpression { items:_, properties } => {
+                        let item = properties.get(&key);
+                        match item {
+                            Some(i) => {
+                                current = i;
+                            }
+                            None => {
+                                let prototype = properties.get("prototype");
+                                match prototype {
+                                    None => {}
+                                    Some(item) => {
+                                        match item {
+                                            JSItem::Object { mutable: _, properties } => {
+                                                let p_item = properties.get(&key);
+                                                if let Some(item) = p_item {
+                                                    current = item;
+                                                }
+                                            }
+                                            _ => {
+                                                return Err(());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     _ => {

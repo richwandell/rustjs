@@ -40,6 +40,9 @@ pub(crate) enum AssignmentType {
     },
     ObjectExpression {
         end: usize
+    },
+    ArrayAssignment {
+        end: usize
     }
 }
 
@@ -135,7 +138,7 @@ impl Parser {
                             js_items.push(assign);
                             i = end;
                         }
-                        AssignmentType::ObjectExpression {end} => {
+                        AssignmentType::ArrayAssignment {end} | AssignmentType::ObjectExpression {end} => {
                             let t = tokens[i..=end].to_vec();
                             let exr = create_assignment_expression(t).unwrap();
                             js_items.push(exr);
