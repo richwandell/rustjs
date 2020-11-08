@@ -2,13 +2,14 @@
 
 mod lexer;
 mod parser;
-mod vm;
+mod compiler;
+mod ast_interpreter;
 
 use std::{fs};
 use crate::lexer::lexer::Lexer;
 use clap::{App, Arg};
 use crate::parser::parser::Parser;
-use crate::vm::interpreter::Interpreter;
+use crate::ast_interpreter::interpreter::Interpreter;
 use crate::parser::symbols::JSItem;
 
 extern crate clap;

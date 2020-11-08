@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::parser::symbols::{JSItem, Expression};
-use crate::vm::interpreter::Interpreter;
+use crate::ast_interpreter::interpreter::Interpreter;
 
 pub(crate) enum InsertResult {
     Ref {

@@ -1,10 +1,10 @@
 use crate::parser::symbols::{JSItem, StdFun};
 use crate::lexer::js_token::Tok;
-use crate::vm::std::inherit::inherit;
-use crate::vm::interpreter::Interpreter;
-use crate::vm::std::array::array_constructor;
-use crate::vm::scope::insert::set_object;
-use crate::vm::helpers::find_object_from_reference;
+use crate::ast_interpreter::std::inherit::inherit;
+use crate::ast_interpreter::interpreter::Interpreter;
+use crate::ast_interpreter::std::array::array_constructor;
+use crate::ast_interpreter::scope::insert::set_object;
+use crate::ast_interpreter::helpers::find_object_from_reference;
 
 pub(crate) fn std_fun_apply(interpreter: &mut Interpreter, this_path: Vec<String>, args: (Vec<Tok>, Vec<JSItem>)) -> Result<JSItem, ()> {
     if let Ok(object) = find_object_from_reference(interpreter, this_path) {

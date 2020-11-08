@@ -1,7 +1,7 @@
 use crate::parser::parser::Parser;
 use std::fs;
 use crate::lexer::lexer::Lexer;
-use crate::vm::interpreter::Interpreter;
+use crate::ast_interpreter::interpreter::Interpreter;
 use crate::parser::symbols::JSItem;
 use std::collections::HashMap;
 

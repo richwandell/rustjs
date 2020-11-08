@@ -1,7 +1,7 @@
 use crate::parser::symbols::JSItem;
 use std::collections::HashMap;
-use crate::vm::interpreter::Interpreter;
-use crate::vm::helpers::{find_object_from_reference};
+use crate::ast_interpreter::interpreter::Interpreter;
+use crate::ast_interpreter::helpers::{find_object_from_reference};
 
 pub(crate) fn inherit(int: &Interpreter, from: JSItem, to: JSItem) -> JSItem {
 

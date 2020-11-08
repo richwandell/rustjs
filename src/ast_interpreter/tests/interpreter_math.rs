@@ -1,6 +1,6 @@
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
-use crate::vm::interpreter::Interpreter;
+use crate::ast_interpreter::interpreter::Interpreter;
 use crate::parser::symbols::JSItem;
 
 #[test]

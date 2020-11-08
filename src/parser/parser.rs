@@ -10,9 +10,7 @@ use crate::parser::create::for_statement::create_for_statement;
 use crate::parser::find::function::find_end_of_function;
 use crate::parser::create::block_statement::create_object_expression;
 
-pub(crate) struct Parser {
-    pub ast_tree: Vec<Expression>,
-}
+pub(crate) struct Parser {}
 
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) enum SyntaxError {
@@ -219,8 +217,6 @@ impl Parser {
     }
 
     pub fn new() -> Parser {
-        Parser {
-            ast_tree: vec![],
-        }
+        Parser {}
     }
 }

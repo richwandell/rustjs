@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::parser::symbols::{JSItem};
-use crate::vm::interpreter::Interpreter;
-use crate::vm::scope::insert::set_object;
+use crate::ast_interpreter::interpreter::Interpreter;
+use crate::ast_interpreter::scope::insert::set_object;
 
 pub(crate) fn create_object(mut int: Interpreter) -> Interpreter {
     let mut object_prototype = HashMap::new();

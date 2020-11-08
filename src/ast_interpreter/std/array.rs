@@ -1,9 +1,9 @@
 use crate::parser::symbols::{JSItem, StdFun, Expression};
 use crate::lexer::js_token::Tok;
-use crate::vm::interpreter::Interpreter;
-use crate::vm::std::inherit::inherit;
-use crate::vm::scope::insert::set_object;
-use crate::vm::helpers::find_object_from_reference;
+use crate::ast_interpreter::interpreter::Interpreter;
+use crate::ast_interpreter::std::inherit::inherit;
+use crate::ast_interpreter::scope::insert::set_object;
+use crate::ast_interpreter::helpers::find_object_from_reference;
 
 pub(crate) fn array_constructor(mut arguments: Vec<JSItem>) -> Result<JSItem, ()> {
     let _this_arg = arguments.remove(0);

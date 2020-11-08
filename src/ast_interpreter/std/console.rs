@@ -2,8 +2,8 @@ use crate::parser::symbols::{JSItem, StdFun};
 use std::fmt::{Display, Formatter, Result};
 use std::collections::HashMap;
 use crate::lexer::js_token::Tok;
-use crate::vm::interpreter::Interpreter;
-use crate::vm::scope::insert::set_object;
+use crate::ast_interpreter::interpreter::Interpreter;
+use crate::ast_interpreter::scope::insert::set_object;
 
 struct LogVec(Vec<JSItem>);
 

@@ -1,5 +1,5 @@
 use crate::parser::symbols::{JSItem, Expression, AssignOp};
-use crate::vm::interpreter::Interpreter;
+use crate::ast_interpreter::interpreter::Interpreter;
 
 pub(crate) fn o_to_v(js_out: JSItem, assign_op: AssignOp) -> JSItem {
     let mut mutable = false;

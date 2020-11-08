@@ -1,8 +1,8 @@
-use crate::vm::std::array::create_array;
-use crate::vm::std::function::create_function;
-use crate::vm::std::object::create_object;
-use crate::vm::interpreter::Interpreter;
-use crate::vm::std::console::create_console;
+use crate::ast_interpreter::std::array::create_array;
+use crate::ast_interpreter::std::function::create_function;
+use crate::ast_interpreter::std::object::create_object;
+use crate::ast_interpreter::interpreter::Interpreter;
+use crate::ast_interpreter::std::console::create_console;
 
 mod object;
 pub(crate) mod array;

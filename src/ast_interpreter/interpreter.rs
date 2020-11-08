@@ -1,15 +1,15 @@
 use crate::parser::symbols::{JSItem, Operator, Statement, StdFun, AssignOp};
 use crate::parser::symbols::Expression;
-use crate::vm::bin_op::{bin_add, bin_mul, bin_sub, bin_div, bin_less};
+use crate::ast_interpreter::bin_op::{bin_add, bin_mul, bin_sub, bin_div, bin_less};
 use std::collections::HashMap;
 use crate::lexer::js_token::Tok;
-use crate::vm::std::{create_std_objects};
-use crate::vm::std::console::std_log;
-use crate::vm::std::function::std_fun_apply;
-use crate::vm::helpers::{o_to_v, find_object_from_reference, find_reference_from_member_expression};
-use crate::vm::scope::insert::{set_object};
-use crate::vm::std::array::std_array_push;
-use crate::vm::std::inherit::inherit;
+use crate::ast_interpreter::std::{create_std_objects};
+use crate::ast_interpreter::std::console::std_log;
+use crate::ast_interpreter::std::function::std_fun_apply;
+use crate::ast_interpreter::helpers::{o_to_v, find_object_from_reference, find_reference_from_member_expression};
+use crate::ast_interpreter::scope::insert::{set_object};
+use crate::ast_interpreter::std::array::std_array_push;
+use crate::ast_interpreter::std::inherit::inherit;
 
 pub(crate) struct Interpreter {
     pub(crate) scopes: Vec<HashMap<String, JSItem>>,
