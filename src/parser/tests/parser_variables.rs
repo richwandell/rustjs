@@ -107,7 +107,7 @@ fn test_let_math_declaration1() {
 
 #[test]
 fn test_let_var_plus_var() {
-    let file = fs::read_to_string("js/variables/let_a_math1.js");
+    let file = fs::read_to_string("js/variables/let_var_plus_var.js");
 
     let mut lex = Lexer::new();
     let mut parser = Parser::new();
@@ -119,21 +119,11 @@ fn test_let_var_plus_var() {
     assert!(function.eq(&JSItem::St {
         statement: Box::new(Statement::AssignmentExpression {
             operator: AssignOp::Let,
-            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "a".to_string()})},
+            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "c".to_string()})},
             right: JSItem::Ex {expression: Box::new(Expression::Binop {
-                a: Box::new(Expression::Number { value: 1. }),
+                a: Box::new(Expression::Identifier { name: "a".to_string() }),
                 op: Operator::Add,
-                b: Box::new(Expression::Binop {
-                    a: Box::new(Expression::Number {value: 2.}),
-                    op: Operator::Mult,
-                    b: Box::new(Expression::SubExpression {
-                        expression: Box::new(Expression::Binop {
-                            a: Box::new(Expression::Number {value: 3.}),
-                            op: Operator::Add,
-                            b: Box::new(Expression::Number {value: 2.})
-                        })
-                    })
-                }),
+                b: Box::new(Expression::Identifier { name: "b".to_string() }),
             })}
         })
     }))

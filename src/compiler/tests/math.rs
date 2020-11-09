@@ -1,6 +1,7 @@
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
-use crate::compiler::compiler::{Compiler, Op};
+use crate::compiler::compiler::{Compiler};
+use crate::compiler::op_codes::Op;
 
 #[test]
 fn test_simple_add() {
@@ -14,14 +15,14 @@ fn test_simple_add() {
     com.compile(item);
 
     assert_eq!(com.bc_ins, vec![
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 1.
         },
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 2.
         },
         Op::Add,
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 3.
         },
         Op::Add
@@ -40,10 +41,10 @@ fn test_simple_sub() {
     com.compile(item);
 
     assert_eq!(com.bc_ins, vec![
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 3.
         },
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 2.
         },
         Op::Sub
@@ -62,10 +63,10 @@ fn test_simple_mul() {
     com.compile(item);
 
     assert_eq!(com.bc_ins, vec![
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 3.
         },
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 2.
         },
         Op::Mul
@@ -84,10 +85,10 @@ fn test_simple_div() {
     com.compile(item);
 
     assert_eq!(com.bc_ins, vec![
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 3.
         },
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 2.
         },
         Op::Div
@@ -106,14 +107,14 @@ fn test_add_sub() {
     com.compile(item);
 
     assert_eq!(com.bc_ins, vec![
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 3.
         },
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 2.
         },
         Op::Add,
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 1.
         },
         Op::Sub
@@ -132,14 +133,14 @@ fn test_add_sub_expression() {
     com.compile(item);
 
     assert_eq!(com.bc_ins, vec![
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 3.
         },
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 2.
         },
         Op::Add,
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 1.
         },
         Op::Sub
@@ -158,16 +159,120 @@ fn test_sub_add_expression() {
     com.compile(item);
 
     assert_eq!(com.bc_ins, vec![
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 3.
         },
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 2.
         },
-        Op::PushNum {
+        Op::LoadNumConst {
             value: 1.
         },
         Op::Add,
         Op::Sub
+    ]);
+}
+
+#[test]
+fn test_add_mul() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("3 + 2 * 3"));
+    let mut js_items = parser.parse(tokens);
+
+    let mut com = Compiler::new();
+    let item = js_items.pop().unwrap();
+    com.compile(item);
+
+    assert_eq!(com.bc_ins, vec![
+        Op::LoadNumConst {
+            value: 3.
+        },
+        Op::LoadNumConst {
+            value: 2.
+        },
+        Op::LoadNumConst {
+            value: 3.
+        },
+        Op::Mul,
+        Op::Add
+    ]);
+}
+
+#[test]
+fn test_mul_add() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("3 * 2 + 3"));
+    let mut js_items = parser.parse(tokens);
+
+    let mut com = Compiler::new();
+    let item = js_items.pop().unwrap();
+    com.compile(item);
+
+    assert_eq!(com.bc_ins, vec![
+        Op::LoadNumConst {
+            value: 3.
+        },
+        Op::LoadNumConst {
+            value: 2.
+        },
+        Op::Mul,
+        Op::LoadNumConst {
+            value: 3.
+        },
+        Op::Add
+    ]);
+}
+
+#[test]
+fn test_mul_add_expression() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("3 * (2 + 3)"));
+    let mut js_items = parser.parse(tokens);
+
+    let mut com = Compiler::new();
+    let item = js_items.pop().unwrap();
+    com.compile(item);
+
+    assert_eq!(com.bc_ins, vec![
+        Op::LoadNumConst {
+            value: 3.
+        },
+        Op::LoadNumConst {
+            value: 2.
+        },
+        Op::LoadNumConst {
+            value: 3.
+        },
+        Op::Add,
+        Op::Mul
+    ]);
+}
+
+#[test]
+fn test_mul_expression_add() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("(3 * 2) + 3"));
+    let mut js_items = parser.parse(tokens);
+
+    let mut com = Compiler::new();
+    let item = js_items.pop().unwrap();
+    com.compile(item);
+
+    assert_eq!(com.bc_ins, vec![
+        Op::LoadNumConst {
+            value: 3.
+        },
+        Op::LoadNumConst {
+            value: 2.
+        },
+        Op::Mul,
+        Op::LoadNumConst {
+            value: 3.
+        },
+        Op::Add
     ]);
 }
