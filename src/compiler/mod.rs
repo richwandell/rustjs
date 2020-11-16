@@ -1,3 +1,4 @@
-mod compiler;
+pub(crate) mod compiler;
 mod tests;
-mod op_codes;
+pub(crate) mod op_codes;
+mod to_bytes;

@@ -28,7 +28,7 @@ fn test_for() {
         Op::Less,
         Op::PopJumpIfFalse {to: 14},
         Op::Load {name: "console".to_string()},
-        Op::Load {name: "log".to_string()},
+        Op::LoadProp {name: "log".to_string()},
         Op::Load {name: "i".to_string()},
         Op::Call {args: 1},
         Op::Load {name: "i".to_string()},

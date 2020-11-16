@@ -4,6 +4,7 @@ mod lexer;
 mod parser;
 mod compiler;
 mod ast_interpreter;
+mod vm;
 
 use std::{fs};
 use crate::lexer::lexer::Lexer;
@@ -27,6 +28,18 @@ fn main() {
             .help("Expose GP")
             .long("expose-gc")
             .required(false))
+        .arg(Arg::with_name("compile")
+            .help("Compile to bytecode")
+            .long("compile")
+            .short("c")
+            .requires_all(&["outputfile"])
+            .required(false))
+        .arg(Arg::with_name("outputfile")
+            .help("Output file name")
+            .long("outputfile")
+            .short("o")
+            .requires_all(&["compile"])
+            .takes_value(true))
         .get_matches();
 
     let file_name = matches.value_of("file").unwrap();
@@ -38,6 +51,12 @@ fn main() {
             let mut parser = Parser::new();
             let tokens = lex.lex(code);
             let mut js_items = parser.parse(tokens);
+
+            if let Some(..) = matches.value_of("compile") {
+                let outputfile = matches.value_of("outputfile").unwrap();
+                println!("{}", outputfile);
+            }
+
 
             let mut int = Interpreter::new();
             for item in js_items {

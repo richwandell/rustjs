@@ -60,7 +60,11 @@ impl Compiler {
             }
             Expression::MemberExpression { object, property } => {
                 self.visit_ex(*object);
-                self.visit_ex(*property);
+                let prop = match *property {
+                    Expression::Identifier { name } => name,
+                    _ => "".to_string()
+                };
+                self.bc_ins.push(Op::LoadProp {name: prop})
             }
             Expression::String {value} => {
                 self.bc_ins.push(Op::LoadStrConst {value});

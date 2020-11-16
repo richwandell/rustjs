@@ -18,7 +18,7 @@ fn test_console_dot_log() {
         Op::Load {
             name: "console".to_string()
         },
-        Op::Load {
+        Op::LoadProp {
             name: "log".to_string()
         },
         Op::LoadStrConst {

@@ -196,6 +196,12 @@ pub(crate) enum JSItem {
         properties: HashMap<String, JSItem>
     },
 
+    Located {
+        scope: usize,
+        location: String,
+        object: Box<JSItem>
+    },
+
     Array {
         items: Vec<JSItem>,
         properties: HashMap<String, JSItem>
