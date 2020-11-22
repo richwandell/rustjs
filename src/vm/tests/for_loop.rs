@@ -133,50 +133,52 @@ fn test_function_nested_for() {
         vec![JSItem::Number {value: 4.}, JSItem::Number {value: 4.}],
     ]))
 }
-//
-// #[test]
-// fn test_function_for_scope() {
-//     let file = fs::read_to_string("js/functions/function_for_scope.js");
-//
-//     let mut lex = Lexer::new();
-//     let mut parser = Parser::new();
-//     let tokens = lex.lex(file.unwrap());
-//     let mut js_items = parser.parse(tokens);
-//
-//     let mut int = Interpreter::new();
-//     let mut out = JSItem::Undefined;
-//     for item in js_items {
-//         out = int.interpret(item);
-//     }
-//
-//     assert_eq!(out, JSItem::Undefined);
-//     let captured = int.captured_output;
-//     assert_eq!(captured.len(), 25);
-//     assert!(captured.eq(&vec![
-//         vec![JSItem::Number {value: 5.}, JSItem::Number {value: 5.}],
-//         vec![JSItem::Number {value: 5.}, JSItem::Number {value: 6.}],
-//         vec![JSItem::Number {value: 5.}, JSItem::Number {value: 7.}],
-//         vec![JSItem::Number {value: 5.}, JSItem::Number {value: 8.}],
-//         vec![JSItem::Number {value: 5.}, JSItem::Number {value: 9.}],
-//         vec![JSItem::Number {value: 6.}, JSItem::Number {value: 5.}],
-//         vec![JSItem::Number {value: 6.}, JSItem::Number {value: 6.}],
-//         vec![JSItem::Number {value: 6.}, JSItem::Number {value: 7.}],
-//         vec![JSItem::Number {value: 6.}, JSItem::Number {value: 8.}],
-//         vec![JSItem::Number {value: 6.}, JSItem::Number {value: 9.}],
-//         vec![JSItem::Number {value: 7.}, JSItem::Number {value: 5.}],
-//         vec![JSItem::Number {value: 7.}, JSItem::Number {value: 6.}],
-//         vec![JSItem::Number {value: 7.}, JSItem::Number {value: 7.}],
-//         vec![JSItem::Number {value: 7.}, JSItem::Number {value: 8.}],
-//         vec![JSItem::Number {value: 7.}, JSItem::Number {value: 9.}],
-//         vec![JSItem::Number {value: 8.}, JSItem::Number {value: 5.}],
-//         vec![JSItem::Number {value: 8.}, JSItem::Number {value: 6.}],
-//         vec![JSItem::Number {value: 8.}, JSItem::Number {value: 7.}],
-//         vec![JSItem::Number {value: 8.}, JSItem::Number {value: 8.}],
-//         vec![JSItem::Number {value: 8.}, JSItem::Number {value: 9.}],
-//         vec![JSItem::Number {value: 9.}, JSItem::Number {value: 5.}],
-//         vec![JSItem::Number {value: 9.}, JSItem::Number {value: 6.}],
-//         vec![JSItem::Number {value: 9.}, JSItem::Number {value: 7.}],
-//         vec![JSItem::Number {value: 9.}, JSItem::Number {value: 8.}],
-//         vec![JSItem::Number {value: 9.}, JSItem::Number {value: 9.}],
-//     ]))
-// }
+
+#[test]
+fn test_function_for_scope() {
+    let file = fs::read_to_string("js/functions/function_for_scope.js");
+
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(file.unwrap());
+    let mut js_items = parser.parse(tokens);
+
+    let mut compiler = Compiler::new();
+    for item in js_items {
+        compiler.compile(item);
+    }
+
+    let mut vm = Vm::new();
+    let out = vm.run(compiler.bc_ins);
+
+    assert_eq!(out, JSItem::Undefined);
+    let captured = vm.captured_output;
+    assert_eq!(captured.len(), 25);
+    assert!(captured.eq(&vec![
+        vec![JSItem::Number {value: 5.}, JSItem::Number {value: 5.}],
+        vec![JSItem::Number {value: 5.}, JSItem::Number {value: 6.}],
+        vec![JSItem::Number {value: 5.}, JSItem::Number {value: 7.}],
+        vec![JSItem::Number {value: 5.}, JSItem::Number {value: 8.}],
+        vec![JSItem::Number {value: 5.}, JSItem::Number {value: 9.}],
+        vec![JSItem::Number {value: 6.}, JSItem::Number {value: 5.}],
+        vec![JSItem::Number {value: 6.}, JSItem::Number {value: 6.}],
+        vec![JSItem::Number {value: 6.}, JSItem::Number {value: 7.}],
+        vec![JSItem::Number {value: 6.}, JSItem::Number {value: 8.}],
+        vec![JSItem::Number {value: 6.}, JSItem::Number {value: 9.}],
+        vec![JSItem::Number {value: 7.}, JSItem::Number {value: 5.}],
+        vec![JSItem::Number {value: 7.}, JSItem::Number {value: 6.}],
+        vec![JSItem::Number {value: 7.}, JSItem::Number {value: 7.}],
+        vec![JSItem::Number {value: 7.}, JSItem::Number {value: 8.}],
+        vec![JSItem::Number {value: 7.}, JSItem::Number {value: 9.}],
+        vec![JSItem::Number {value: 8.}, JSItem::Number {value: 5.}],
+        vec![JSItem::Number {value: 8.}, JSItem::Number {value: 6.}],
+        vec![JSItem::Number {value: 8.}, JSItem::Number {value: 7.}],
+        vec![JSItem::Number {value: 8.}, JSItem::Number {value: 8.}],
+        vec![JSItem::Number {value: 8.}, JSItem::Number {value: 9.}],
+        vec![JSItem::Number {value: 9.}, JSItem::Number {value: 5.}],
+        vec![JSItem::Number {value: 9.}, JSItem::Number {value: 6.}],
+        vec![JSItem::Number {value: 9.}, JSItem::Number {value: 7.}],
+        vec![JSItem::Number {value: 9.}, JSItem::Number {value: 8.}],
+        vec![JSItem::Number {value: 9.}, JSItem::Number {value: 9.}],
+    ]))
+}

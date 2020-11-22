@@ -36,62 +36,26 @@ impl Vm {
             }
             let op = ops.get(self.ip).unwrap();
             match op {
-                Op::DeclareFunc { start, end, mutable:_, params, name } => {
-                    self.declare_func(start.clone(), end.clone(), params.clone(), name.clone())
-                }
-                Op::Return => {
-                    self.return_to()
-                }
-                Op::Add => {
-                    self.add()
-                }
-                Op::Sub => {
-                    self.sub()
-                }
-                Op::Div => {
-                    self.div()
-                }
-                Op::Mul => {
-                    self.mul()
-                }
-                Op::Less => {
-                    self.less()
-                }
-                Op::LoadNumConst { value } => {
-                    self.load_num_const(value.clone())
-                }
-                Op::LoadStrConst { value } => {
-                    self.load_str_const(value.clone())
-                }
-                Op::Store { name } => {
-                    self.store(name.clone())
-                }
-                Op::Load { name } => {
-                    self.load(name.clone())
-                }
+                Op::DeclareFunc { start, end, mutable:_, params, name } => self.declare_func(start.clone(), end.clone(), params.clone(), name.clone()),
+                Op::Return => self.return_to(),
+                Op::Add => self.add(),
+                Op::Sub => self.sub(),
+                Op::Div => self.div(),
+                Op::Mul => self.mul(),
+                Op::Less => self.less(),
+                Op::LoadNumConst { value } => self.load_num_const(value.clone()),
+                Op::LoadStrConst { value } => self.load_str_const(value.clone()),
+                Op::Store { name } => self.store(name.clone()),
+                Op::Load { name } => self.load(name.clone()),
                 Op::LoadMember => {}
-                Op::Call { args } => {
-                    self.call(args.clone())
-                }
+                Op::Call { args } => self.call(args.clone()),
                 Op::PopTop => {}
-                Op::SetupLoop => {
-                    self.setup_loop()
-                }
-                Op::PopJumpIfFalse { to } => {
-                    self.pop_jump_if_false(to.clone())
-                }
-                Op::JumpAbsolute { to } => {
-                    self.ip = *to;
-                }
-                Op::PopBlock => {
-                    self.pop_scope()
-                }
-                Op::InplaceAdd => {
-                    self.in_place_add()
-                }
-                Op::LoadProp { name } => {
-                    self.load_prop(name.clone())
-                }
+                Op::SetupLoop => self.setup_loop(),
+                Op::PopJumpIfFalse { to } => self.pop_jump_if_false(to.clone()),
+                Op::JumpAbsolute { to } => self.ip = *to,
+                Op::PopBlock => self.pop_scope(),
+                Op::InplaceAdd => self.in_place_add(),
+                Op::LoadProp { name } => self.load_prop(name.clone())
             }
         }
         return self.stack.pop().unwrap_or(JSItem::Undefined);
@@ -363,7 +327,7 @@ impl Vm {
 
     #[allow(unused_must_use)]
     fn store(&mut self, name: String) {
-        let item = self.stack.pop().unwrap();
+        let item = self.get();
         set_object(self, vec![name], item, true);
         self.ip += 1;
     }
