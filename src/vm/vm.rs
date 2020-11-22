@@ -31,12 +31,17 @@ impl Vm {
 
     pub(crate) fn run(&mut self, ops: Vec<Op>) -> JSItem {
         loop {
-            if self.ip == ops.len() {
+            if self.ip >= ops.len() {
                 break;
             }
             let op = ops.get(self.ip).unwrap();
             match op {
-                Op::Return => {}
+                Op::DeclareFunc { start, end, mutable:_, params, name } => {
+                    self.declare_func(start.clone(), end.clone(), params.clone(), name.clone())
+                }
+                Op::Return => {
+                    self.return_to()
+                }
                 Op::Add => {
                     self.add()
                 }
@@ -92,6 +97,25 @@ impl Vm {
         return self.stack.pop().unwrap_or(JSItem::Undefined);
     }
 
+    fn return_to(&mut self) {
+        match self.stack.pop().unwrap() {
+            JSItem::ReturnJump { to } => {
+                self.ip = to;
+            }
+            _ => {}
+        }
+    }
+
+    #[allow(unused_must_use)]
+    fn declare_func(&mut self, start: usize, end: usize, params: Vec<String>, name: String) {
+        let func = JSItem::BcFunction {
+            start,
+            params
+        };
+        set_object(self, vec![name], func, true);
+        self.ip = end + 1;
+    }
+
     fn pop_scope(&mut self) {
         let scope = self.scopes.pop().unwrap();
 
@@ -125,15 +149,42 @@ impl Vm {
         for _ in 0..args {
             arguments.push(self.get());
         }
+        arguments.reverse();
 
         let func = self.get();
         match func {
             JSItem::Std { params, func } => {
-                self.call_std(params, arguments, func)
+                self.call_std(params, arguments, func);
+                self.ip += 1;
+            }
+            JSItem::BcFunction { start, params} => {
+                self.call_bcfunc(start, params, arguments)
             }
             _ => {}
         }
-        self.ip += 1;
+    }
+
+    #[allow(unused_must_use)]
+    fn call_bcfunc(&mut self, start: usize, mut params: Vec<String>, mut arguments: Vec<JSItem>) {
+        self.scopes.push(HashMap::new());
+
+        params.reverse();
+        arguments.reverse();
+
+        let mut extra = 1;
+        while !arguments.is_empty() {
+            let arg = arguments.pop().unwrap();
+            if let Some(param) = params.pop() {
+                set_object(self, vec![param], arg, true);
+            } else {
+                set_object(self, vec![format!("{}{}", "extra.".to_string(), extra.to_string())], arg, true);
+                extra += 1;
+            }
+        }
+
+        self.stack.push(JSItem::ReturnJump {to: self.ip + 1});
+
+        self.ip = start;
     }
 
     fn make_params(&mut self, mut params: Vec<Tok>, mut arguments: Vec<JSItem>) -> (Vec<Tok>, Vec<JSItem>) {
@@ -269,6 +320,16 @@ impl Vm {
                             object: Box::from(JSItem::Object { mutable, properties: properties.clone() })
                         });
                         JSItem::Object { mutable, properties }
+                    }
+                    JSItem::BcFunction { start, params } => {
+                        self.objects.insert(location.clone(), JSItem::BcFunction {
+                            start: start.clone(),
+                            params: params.clone()
+                        });
+                        JSItem::BcFunction {
+                            start,
+                            params
+                        }
                     }
                     _ => {
                         JSItem::Null

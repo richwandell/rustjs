@@ -1,5 +1,6 @@
 use crate::parser::symbols::{JSItem, Expression, Operator, Statement};
 use crate::compiler::op_codes::Op;
+use crate::lexer::js_token::Tok;
 
 
 pub(crate) struct Compiler {
@@ -75,6 +76,58 @@ impl Compiler {
 
     fn visit_st(&mut self, st: Statement) {
         match st {
+            Statement::AssignFunction { mutable, function } => {
+                let func_start = self.bc_ins.len();
+                self.visit_st(*function);
+
+                match self.bc_ins.get(func_start).unwrap() {
+                    Op::DeclareFunc { start, end, mutable: _, params, name } => {
+                        self.bc_ins[func_start] = Op::DeclareFunc {
+                            start: start.clone(),
+                            end: end.clone(),
+                            mutable,
+                            params: params.clone(),
+                            name: name.clone()
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            Statement::FunctionDef { name, params, body } => {
+                let mut prams = vec![];
+                for p in params {
+                    match p {
+                        Tok::Name { name } => prams.push(name),
+                        Tok::String { value } => prams.push(value),
+                        _ => {}
+                    }
+                }
+
+                let func_start = self.bc_ins.len();
+
+                self.bc_ins.push(Op::DeclareFunc {
+                    mutable: true,
+                    name: name.clone(),
+                    start: 0,
+                    end: 0,
+                    params: vec![]
+                });
+
+                for item in body {
+                    self.visit(item);
+                }
+
+                self.bc_ins.push(Op::PopBlock);
+                self.bc_ins.push(Op::Return);
+
+                self.bc_ins[func_start] = Op::DeclareFunc {
+                    start: func_start + 1,
+                    end: self.bc_ins.len() - 1,
+                    mutable: true,
+                    params: prams,
+                    name
+                }
+            }
             Statement::AssignmentExpression { operator:_, left, right } => {
                 self.visit(right);
                 self.visit(left);

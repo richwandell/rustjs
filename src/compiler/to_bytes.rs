@@ -74,6 +74,7 @@ pub(crate) fn to_bytes(ops: Vec<Op>) -> Vec<u8> {
                 buffer.write_u8(0x13);
                 buffer.write_string(&name);
             }
+            Op::DeclareFunc { .. } => {}
         }
     }
     return buffer.to_bytes();

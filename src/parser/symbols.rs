@@ -217,6 +217,15 @@ pub(crate) enum JSItem {
         params: Vec<Tok>,
         properties: HashMap<String, JSItem>,
         body: Vec<JSItem>
+    },
+
+    BcFunction {
+        start: usize,
+        params: Vec<String>
+    },
+
+    ReturnJump {
+        to: usize
     }
 }
 

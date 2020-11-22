@@ -36,5 +36,12 @@ pub(crate) enum Op {
     LoadProp { // 0x13
         name: String
     },
+    DeclareFunc { // 0x14
+        start: usize,
+        end: usize,
+        mutable: bool,
+        params: Vec<String>,
+        name: String
+    }
 }
 
