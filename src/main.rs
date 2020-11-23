@@ -44,7 +44,6 @@ fn compile(file_name: &str, output_file: &str) {
         com.compile(item);
     }
     let bytes = to_bytes(com.bc_ins);
-    println!("{:?}", bytes);
     let mut file = File::create(output_file).unwrap();
     file.write_all(&bytes);
 }

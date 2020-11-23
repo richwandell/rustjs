@@ -42,6 +42,7 @@ pub(crate) enum Op {
         mutable: bool,
         params: Vec<String>,
         name: String
-    }
+    },
+    CreateObj // 0x15
 }
 

@@ -55,7 +55,8 @@ impl Vm {
                 Op::JumpAbsolute { to } => self.ip = *to,
                 Op::PopBlock => self.pop_scope(),
                 Op::InplaceAdd => self.in_place_add(),
-                Op::LoadProp { name } => self.load_prop(name.clone())
+                Op::LoadProp { name } => self.load_prop(name.clone()),
+                Op::CreateObj => {}
             }
         }
         return self.stack.pop().unwrap_or(JSItem::Undefined);

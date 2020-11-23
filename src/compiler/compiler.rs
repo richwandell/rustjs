@@ -1,6 +1,7 @@
 use crate::parser::symbols::{JSItem, Expression, Operator, Statement};
 use crate::compiler::op_codes::Op;
 use crate::lexer::js_token::Tok;
+use std::collections::HashMap;
 
 
 pub(crate) struct Compiler {
@@ -173,7 +174,18 @@ impl Compiler {
             JSItem::St { statement } => {
                 self.visit_st(*statement)
             }
+            JSItem::Object { mutable, properties } => {
+                self.visit_object(mutable, properties)
+            }
             _ => {}
+        }
+    }
+
+    fn visit_object(&mut self, mutable: bool, properties: HashMap<String, JSItem>) {
+        self.bc_ins.push(Op::CreateObj);
+
+        for key in properties.keys() {
+
         }
     }
 
