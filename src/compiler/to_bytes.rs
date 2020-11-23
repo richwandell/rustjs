@@ -1,6 +1,5 @@
 use crate::compiler::op_codes::Op;
 use bytebuffer::ByteBuffer;
-use std::io::Bytes;
 
 pub(crate) fn to_bytes(ops: Vec<Op>) -> Vec<u8> {
     let mut buffer = ByteBuffer::new();
@@ -84,6 +83,7 @@ pub(crate) fn to_bytes(ops: Vec<Op>) -> Vec<u8> {
                 buffer.write_string(&name);
             }
             Op::CreateObj => {}
+            Op::StoreProp { .. } => {}
         }
     }
     return buffer.to_bytes();

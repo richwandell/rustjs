@@ -43,6 +43,9 @@ pub(crate) enum Op {
         params: Vec<String>,
         name: String
     },
-    CreateObj // 0x15
+    CreateObj, // 0x15
+    StoreProp { // 0x16
+        name: String
+    }
 }
 

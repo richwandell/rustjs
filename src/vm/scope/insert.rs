@@ -1,9 +1,67 @@
 use crate::parser::symbols::{JSItem};
 use crate::vm::vm::Vm;
+use std::collections::HashMap;
 
 pub(crate) enum ObjecResult {
     Success,
     Error,
+}
+
+pub(crate) fn add_to_located_obj(vm: &mut Vm, scope_num: usize, location: String, value: JSItem, name: String) -> Vec<String> {
+    let mut path_dumb = location.split(":").collect::<Vec<&str>>();
+    path_dumb.remove(0);
+
+    let mut path = vec![];
+    for item in path_dumb {
+        path.push(item.to_string())
+    }
+    path.push(name.clone());
+    let mut scope = vm.scopes.get_mut(scope_num).unwrap();
+    let scoped_item_key = location + ":" + &name;
+    scope.insert(path.join(":"), scoped_item_key.clone());
+
+    vm.objects.insert(scoped_item_key.clone(), JSItem::Located {
+        scope: scope_num,
+        location: scoped_item_key.clone(),
+        object: Box::new(value),
+    });
+    path.insert(0, scope_num.to_string());
+    return path;
+}
+
+pub(crate) fn locate_obj_props(vm: &mut Vm, name: String, obj: JSItem) -> JSItem {
+    match obj {
+        JSItem::Object { mutable, mut properties } => {
+            let mut keys = vec![];
+
+            for key in properties.keys() {
+                keys.push(key.clone());
+            }
+
+            for key in keys {
+                if let JSItem::ObjectReference { mut path } = properties.remove(&key.clone()).unwrap() {
+                    let path_key = path.join(":");
+                    let scope_end = vm.scopes.len() - 1;
+                    if let Some(real_path) = vm.scopes.get_mut(scope_end).unwrap().remove(&path_key) {
+                        if let JSItem::Located { scope, location, object } = vm.objects.remove(&real_path).unwrap() {
+                            path.remove(0);
+                            path.insert(0, name.clone());
+                            path.insert(0, scope_end.to_string());
+                            vm.objects.insert(path.join(":"), JSItem::Located {
+                                scope,
+                                location: path.join(":"),
+                                object
+                            });
+
+                            properties.insert(key, JSItem::ObjectReference { path });
+                        }
+                    }
+                }
+            }
+            JSItem::Object {mutable, properties}
+        }
+        _ => JSItem::Null
+    }
 }
 
 pub(crate) fn set_object(vm: &mut Vm, mut path: Vec<String>, obj: JSItem, overwrite: bool) -> Result<ObjecResult, ObjecResult> {
@@ -14,11 +72,13 @@ pub(crate) fn set_object(vm: &mut Vm, mut path: Vec<String>, obj: JSItem, overwr
     if !overwrite && scope.contains_key(&scoped_item_key) {
         return Err(ObjecResult::Error);
     }
+
     vm.objects.insert(scoped_item_key.clone(), JSItem::Located {
         scope: scope_num,
         location: scoped_item_key.clone(),
         object: Box::new(obj),
     });
+
     scope.insert(path.join(":"), scoped_item_key.clone());
     return Ok(ObjecResult::Success);
 }

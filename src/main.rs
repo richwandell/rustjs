@@ -10,7 +10,6 @@ use std::{fs};
 use crate::lexer::lexer::Lexer;
 use clap::{App, Arg};
 use crate::parser::parser::Parser;
-use crate::ast_interpreter::interpreter::Interpreter;
 use crate::parser::symbols::JSItem;
 use crate::compiler::compiler::Compiler;
 use crate::compiler::to_bytes::to_bytes;

@@ -130,11 +130,15 @@ impl Compiler {
                 }
             }
             Statement::AssignmentExpression { operator:_, left, right } => {
-                self.visit(right);
                 self.visit(left);
-
                 let op = self.bc_ins.pop().unwrap();
+                self.visit(right);
+
                 match op {
+                    Op::LoadProp { name } => {
+                        self.bc_ins.push(Op::StoreProp { name });
+                        self.bc_ins.push(Op::PopTop)
+                    }
                     Op::LoadStrConst { value } => {
                         self.bc_ins.push(Op::Store {name: value})
                     }
@@ -181,11 +185,19 @@ impl Compiler {
         }
     }
 
-    fn visit_object(&mut self, mutable: bool, properties: HashMap<String, JSItem>) {
+    fn visit_object(&mut self, _mutable: bool, mut properties: HashMap<String, JSItem>) {
         self.bc_ins.push(Op::CreateObj);
 
+        let mut keys = vec![];
         for key in properties.keys() {
+            keys.push(key.clone())
+        }
 
+        for key in keys {
+            let item = properties.remove(&key).unwrap();
+
+            self.visit(item);
+            self.bc_ins.push(Op::StoreProp {name: key.clone() });
         }
     }
 

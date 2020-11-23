@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::parser::symbols::{JSItem, StdFun};
 use crate::compiler::op_codes::Op;
 use crate::vm::std::create_std_objects;
-use crate::vm::scope::insert::{set_object, load_object, load_prop};
+use crate::vm::scope::insert::{set_object, load_object, load_prop, locate_obj_props, add_to_located_obj};
 use crate::lexer::js_token::Tok;
 use crate::vm::std::console::std_log;
 
@@ -49,17 +49,82 @@ impl Vm {
                 Op::Load { name } => self.load(name.clone()),
                 Op::LoadMember => {}
                 Op::Call { args } => self.call(args.clone()),
-                Op::PopTop => {}
+                Op::PopTop => self.pop_top(),
                 Op::SetupLoop => self.setup_loop(),
                 Op::PopJumpIfFalse { to } => self.pop_jump_if_false(to.clone()),
                 Op::JumpAbsolute { to } => self.ip = *to,
                 Op::PopBlock => self.pop_scope(),
                 Op::InplaceAdd => self.in_place_add(),
                 Op::LoadProp { name } => self.load_prop(name.clone()),
-                Op::CreateObj => {}
+                Op::CreateObj => self.create_obj(),
+                Op::StoreProp { name } => self.store_prop(name.clone())
             }
         }
         return self.stack.pop().unwrap_or(JSItem::Undefined);
+    }
+
+    fn pop_top(&mut self) {
+        let item = self.stack.pop().unwrap();
+        match item {
+            JSItem::Located { scope, location, object } => {
+                self.objects.insert(location.clone(), JSItem::Located {
+                    scope,
+                    location,
+                    object
+                });
+            }
+            _ => {}
+        }
+    }
+
+    fn add_to_object(&mut self, name: String, item: JSItem, reference: JSItem) {
+        match item {
+            JSItem::Object {mutable, mut properties } => {
+                properties.insert(name, reference);
+                self.stack.push(JSItem::Object {mutable, properties});
+            }
+            JSItem::Located { scope, location, object } => {
+                if let JSItem::Object { mutable, mut properties } = *object {
+                    properties.insert(name, reference);
+                    self.stack.push(JSItem::Located {
+                        scope,
+                        location,
+                        object: Box::from(JSItem::Object {mutable, properties})
+                    })
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn store_prop(&mut self, name: String) {
+        let value = self.get();
+        let object = self.stack.pop().unwrap();
+
+        match object {
+            JSItem::Located { scope, location, object } => {
+                let path = add_to_located_obj(self, scope, location.clone(), value, name.to_string());
+                let reference = JSItem::ObjectReference { path };
+                self.add_to_object(name, JSItem::Located {
+                    scope,
+                    location,
+                    object
+                }, reference);
+            }
+            JSItem::Object { mutable, properties } => {
+                let loc = vec!["0".to_string(), name.clone()];
+                set_object(self, loc.clone(), value, true);
+                let reference = JSItem::ObjectReference { path: loc};
+                self.add_to_object(name, JSItem::Object {mutable, properties}, reference)
+            }
+            _ => {}
+        }
+        self.ip += 1;
+    }
+
+    fn create_obj(&mut self) {
+        self.stack.push(JSItem::Object { mutable: true, properties: Default::default() });
+        self.ip += 1;
     }
 
     fn return_to(&mut self) {
@@ -328,7 +393,20 @@ impl Vm {
 
     #[allow(unused_must_use)]
     fn store(&mut self, name: String) {
-        let item = self.get();
+        let mut is_new_object = false;
+        if let JSItem::Object { mutable: _, properties: _ } = self.stack.get(self.stack.len() - 1).unwrap() {
+            is_new_object = true;
+        }
+
+        let item;
+        if is_new_object {
+            let tmp = self.get();
+            item = locate_obj_props(self, name.clone(), tmp)
+        } else {
+            item = self.get();
+        }
+
+
         set_object(self, vec![name], item, true);
         self.ip += 1;
     }
