@@ -25,6 +25,10 @@ fn test_object_new_property() {
     assert_eq!(out, JSItem::Undefined);
 
     assert_eq!(vm.captured_output, vec![
-        vec![JSItem::String {value: "hi".to_string()}]
+        vec![JSItem::Object { mutable: true, properties: hashmap!{
+            "a".to_string() =>  JSItem::ObjectReference { path: vec![String::from("0"), String::from("a"), String::from("a")] },
+            "b".to_string() => JSItem::ObjectReference { path: vec![String::from("0"), String::from("a"), String::from("b")] },
+            "d".to_string() => JSItem::ObjectReference { path: vec![String::from("0"), String::from("a"), String::from("d")] }
+        } }]
     ]);
 }

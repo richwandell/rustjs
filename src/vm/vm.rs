@@ -75,6 +75,7 @@ impl Vm {
             }
             _ => {}
         }
+        self.ip += 1;
     }
 
     fn add_to_object(&mut self, name: String, item: JSItem, reference: JSItem) {
@@ -97,6 +98,7 @@ impl Vm {
         }
     }
 
+    #[allow(unused_must_use)]
     fn store_prop(&mut self, name: String) {
         let value = self.get();
         let object = self.stack.pop().unwrap();

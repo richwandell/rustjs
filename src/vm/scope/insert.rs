@@ -1,6 +1,5 @@
 use crate::parser::symbols::{JSItem};
 use crate::vm::vm::Vm;
-use std::collections::HashMap;
 
 pub(crate) enum ObjecResult {
     Success,
@@ -43,7 +42,7 @@ pub(crate) fn locate_obj_props(vm: &mut Vm, name: String, obj: JSItem) -> JSItem
                     let path_key = path.join(":");
                     let scope_end = vm.scopes.len() - 1;
                     if let Some(real_path) = vm.scopes.get_mut(scope_end).unwrap().remove(&path_key) {
-                        if let JSItem::Located { scope, location, object } = vm.objects.remove(&real_path).unwrap() {
+                        if let JSItem::Located { scope, location:_, object } = vm.objects.remove(&real_path).unwrap() {
                             path.remove(0);
                             path.insert(0, name.clone());
                             path.insert(0, scope_end.to_string());

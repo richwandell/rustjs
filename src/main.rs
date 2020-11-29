@@ -36,6 +36,7 @@ fn get_js_items(file_name: &str) -> Vec<JSItem> {
     }
 }
 
+#[allow(unused_must_use)]
 fn compile(file_name: &str, output_file: &str) {
     let js_items = get_js_items(file_name);
     let mut com = Compiler::new();
@@ -47,6 +48,7 @@ fn compile(file_name: &str, output_file: &str) {
     file.write_all(&bytes);
 }
 
+#[allow(unused_must_use)]
 fn run_bytes(file_name: &str) {
     let mut file = File::open(file_name).unwrap();
     let mut buffer = Vec::<u8>::new();

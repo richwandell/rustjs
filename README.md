@@ -9,7 +9,6 @@ A toy JavaScript interpreter written in Rust.
 <img src="readme1.gif" />
 
 ### TODO
-- [ ] Adding props to objects
 - [ ] Array pop
 - [ ] Array sort
 - [ ] Array concat
