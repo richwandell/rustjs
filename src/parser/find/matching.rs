@@ -56,3 +56,18 @@ pub(crate) fn find_matching_sqb(start: usize, tokens: &Vec<Tok>) -> usize {
     }
     return j;
 }
+
+pub(crate) fn find_end_of_line_or_lbrace(start: usize, tokens: &Vec<Tok>) -> usize {
+    let mut j = start;
+    while j < tokens.len() {
+        let token = tokens.get(j as usize).unwrap();
+        if token.eq(&Tok::EndOfLine) {
+            return j;
+        }
+        if token.eq(&Tok::Lbrace) {
+            return j;
+        }
+        j += 1;
+    }
+    return j;
+}

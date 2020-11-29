@@ -7,6 +7,7 @@ mod math;
 mod one_liners;
 mod for_statements;
 mod arrays;
+mod line_char_iterator;
 
 #[test]
 fn test_iterator() {

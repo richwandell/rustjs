@@ -9,6 +9,8 @@ use crate::parser::find::for_statement::find_end_of_for;
 use crate::parser::create::for_statement::create_for_statement;
 use crate::parser::find::function::find_end_of_function;
 use crate::parser::create::block_statement::create_object_expression;
+use crate::parser::find::if_statement::find_end_of_if;
+use crate::parser::create::if_statement::create_if_statement;
 
 pub(crate) struct Parser {}
 
@@ -94,6 +96,18 @@ impl Parser {
         while i < tokens.len() - 1 {
             let token = tokens.get(i).unwrap();
             match token {
+                Tok::If => {
+                    let result = find_end_of_if(i, &tokens);
+                    match result {
+                        Ok(j) => {
+                            let t = tokens[i..=j].to_vec();
+                            let f = create_if_statement(t);
+                            js_items.push(f);
+                            i = j;
+                        }
+                        Err(_) => {}
+                    }
+                }
                 Tok::For => {
                     let result = find_end_of_for(i, &tokens);
                     match result {

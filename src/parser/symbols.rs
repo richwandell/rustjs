@@ -72,6 +72,7 @@ pub(crate) enum Operator {
     BitAnd,
     FloorDiv,
     Less, // <
+    Greater // >
 }
 
 #[allow(dead_code)]
@@ -115,8 +116,9 @@ pub(crate) enum Statement {
     },
 
     If {
-        test: Box<Expression>,
-        body: Box<Expression>
+        test: JSItem,
+        consequent: Vec<JSItem>,
+        alternate: JSItem
     },
 
     While {

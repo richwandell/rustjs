@@ -24,6 +24,7 @@ impl Compiler {
             Operator::Mult => Op::Mul,
             Operator::Div => Op::Div,
             Operator::Less => Op::Less,
+            Operator::Greater => Op::Greater,
             _ => Op::Add
         };
         self.visit_ex(a);
@@ -165,6 +166,24 @@ impl Compiler {
                 self.bc_ins[pop_jump_i] = Op::PopJumpIfFalse {to: jump_to};
 
                 self.bc_ins.push(Op::PopBlock);
+            }
+            Statement::If { test, consequent, alternate } => {
+                self.visit(test);
+                let pop_jump_i = self.bc_ins.len();
+                self.bc_ins.push(Op::PopJumpIfFalse {to: 0});
+
+                for item in consequent {
+                    self.visit(item);
+                }
+                self.bc_ins.push(Op::JumpAbsolute { to: 0 });
+
+                let mut jump_to = self.bc_ins.len();
+                self.bc_ins[pop_jump_i] = Op::PopJumpIfFalse {to: jump_to};
+                let jump_to_i = jump_to - 1;
+
+                self.visit(alternate);
+                jump_to = self.bc_ins.len();
+                self.bc_ins[jump_to_i] = Op::JumpAbsolute { to: jump_to};
             }
             _ => {}
         }

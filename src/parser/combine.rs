@@ -99,7 +99,7 @@ pub(crate) fn combine_name(last_exp: Expression, name: String) -> Expression {
         }
         Expression::Binop {a, op, b} => {
             match op {
-                Operator::Add | Operator::Sub | Operator::Mult | Operator::Div | Operator::Less => {
+                Operator::Add | Operator::Sub | Operator::Mult | Operator::Div | Operator::Less | Operator::Greater => {
                     let new_a = combine_name(*a, name);
                     return Expression::Binop {
                         a: Box::from(new_a),
@@ -423,6 +423,69 @@ pub(crate) fn combine_less(last_exp: Expression) -> Expression {
             return Expression::Binop {
                 a: Box::new(Expression::None),
                 op: Operator::Less,
+                b: Box::new(Expression::SubExpression { expression }),
+            };
+        }
+        _ => {}
+    }
+    return Expression::None;
+}
+
+pub(crate) fn combine_greater(last_exp: Expression) -> Expression {
+    match last_exp {
+        Expression::Identifier {name} => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Greater,
+                b: Box::new(Expression::Identifier {name}),
+            };
+        }
+        Expression::Number { value } => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Greater,
+                b: Box::new(Expression::Number { value }),
+            };
+        }
+        Expression::Binop { a, op, b } => {
+            match op {
+                Operator::Add => {
+                    return Expression::Binop {
+                        a: Box::from(Expression::None),
+                        op: Operator::Greater,
+                        b: Box::from(Expression::Binop {
+                            a,
+                            op,
+                            b
+                        })
+                    }
+                }
+                Operator::Less => {
+                    let new_exp = combine_greater(*a);
+                    return Expression::Binop {
+                        a: Box::from(new_exp),
+                        op,
+                        b,
+                    };
+                }
+                Operator::Div => {
+                    return Expression::Binop {
+                        a: Box::from(Expression::None),
+                        op: Operator::Greater,
+                        b: Box::from(Expression::Binop {
+                            a,
+                            op,
+                            b,
+                        }),
+                    };
+                }
+                _ => {}
+            }
+        }
+        Expression::SubExpression { expression } => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Greater,
                 b: Box::new(Expression::SubExpression { expression }),
             };
         }

@@ -57,7 +57,8 @@ impl Vm {
                 Op::InplaceAdd => self.in_place_add(),
                 Op::LoadProp { name } => self.load_prop(name.clone()),
                 Op::CreateObj => self.create_obj(),
-                Op::StoreProp { name } => self.store_prop(name.clone())
+                Op::StoreProp { name } => self.store_prop(name.clone()),
+                Op::Greater => self.greater()
             }
         }
         return self.stack.pop().unwrap_or(JSItem::Undefined);
@@ -384,6 +385,19 @@ impl Vm {
             _ => 0.
         };
         self.stack.push(JSItem::Bool {value: v1 < v2});
+        self.ip += 1;
+    }
+
+    fn greater(&mut self) {
+        let v2 = match self.get() {
+            JSItem::Number {value} => value,
+            _ => 0.
+        };
+        let v1 = match self.get() {
+            JSItem::Number {value} => value,
+            _ => 0.
+        };
+        self.stack.push(JSItem::Bool {value: v1 > v2});
         self.ip += 1;
     }
 

@@ -46,6 +46,7 @@ pub(crate) enum Op {
     CreateObj, // 0x15
     StoreProp { // 0x16
         name: String
-    }
+    },
+    Greater // 0x17
 }
 

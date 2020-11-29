@@ -318,6 +318,9 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                         if word == "if" {
                             return find_if(it);
                         }
+                        if word == "else" {
+                            return Ok(vec![Tok::Else, Tok::Lpar]);
+                        }
                         return Ok(vec![Tok::Name { name: word }, Tok::Lpar]);
                     }
                     return Ok(vec![Tok::Lpar]);
@@ -342,6 +345,9 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                     if word == "if" {
                         return find_if(it);
                     }
+                    if word == "else" {
+                        return Ok(vec![Tok::Else]);
+                    }
                     if word == "null" {
                         return Ok(vec![Tok::Null]);
                     }
@@ -365,7 +371,18 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                     match result {
                         Ok(mut tokens) => {
                             if word.len() > 0 {
-                                tokens.insert(0, Tok::Name {name: String::from(&word)});
+                                if word == "return" {
+                                    tokens.insert(0, Tok::Return);
+                                }
+                                else if word == "else" {
+                                    tokens.insert(0, Tok::Else);
+                                }
+                                else if word == "null" {
+                                    tokens.insert(0, Tok::Null);
+                                }
+                                else {
+                                    tokens.insert(0, Tok::Name {name: String::from(&word)});
+                                }
                             }
                             return Ok(tokens)
                         }

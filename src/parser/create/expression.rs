@@ -1,6 +1,6 @@
 use crate::lexer::js_token::Tok;
 use crate::parser::symbols::{JSItem, Statement, Expression, AssignOp};
-use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus, combine_float, combine_dot, combine_name, combine_string, combine_call, combine_expression, combine_less, combine_array};
+use crate::parser::combine::{combine_star, combine_bslash, combine_plus, combine_minus, combine_float, combine_dot, combine_name, combine_string, combine_call, combine_expression, combine_less, combine_array, combine_greater};
 use crate::parser::parser::{Parser, SyntaxError};
 use crate::parser::create::comma_separate_tokens;
 use crate::parser::create::block_statement::create_object_expression;
@@ -146,6 +146,11 @@ pub(crate) fn create_expression(mut tokens: Vec<Tok>) -> JSItem {
             Tok::Less => {
                 let ex = expression_stack.pop().unwrap_or(Expression::None);
                 let exp = combine_less(ex);
+                expression_stack.push(exp);
+            }
+            Tok::Greater => {
+                let ex = expression_stack.pop().unwrap_or(Expression::None);
+                let exp = combine_greater(ex);
                 expression_stack.push(exp);
             }
             Tok::Float { value } => {

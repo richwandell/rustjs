@@ -84,6 +84,9 @@ pub(crate) fn to_bytes(ops: Vec<Op>) -> Vec<u8> {
             }
             Op::CreateObj => {}
             Op::StoreProp { .. } => {}
+            Op::Greater => {
+                buffer.write_u8(0x17)
+            }
         }
     }
     return buffer.to_bytes();

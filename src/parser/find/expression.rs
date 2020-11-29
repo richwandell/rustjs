@@ -170,7 +170,7 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                 }
             }
         }
-        else if prev_type == "less" {
+        else if prev_type == "less" || prev_type == "greater" {
             match token {
                 Tok::Float {value: _} =>{
                     prev_type = "float";
@@ -232,6 +232,10 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                 }
                 Tok::Less => {
                     prev_type = "less";
+                    j += 1;
+                }
+                Tok::Greater => {
+                    prev_type = "greater";
                     j += 1;
                 }
                 Tok::PlusPlus => {
