@@ -167,7 +167,8 @@ impl Lexer {
                 Tok::EndOfLine => println!("{}", "EndOfLine"),
                 Tok::BslashEqual => println!("{}", "BslashEqual"),
                 Tok::PlusPlus => println!("{}", "PlusPlus"),
-                Tok::BslashBslash => println!("{}", "BslashBslash")
+                Tok::BslashBslash => println!("{}", "BslashBslash"),
+                Tok::AmpAmp => println!("{}", "AmpAmp")
             }
         }
     }

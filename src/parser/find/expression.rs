@@ -97,6 +97,10 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     prev_type = "rbrace";
                     j += 1;
                 }
+                Tok::AmpAmp => {
+                    prev_type = "amp_amp";
+                    j += 1;
+                }
                 _ => {
                     return j;
                 }
@@ -222,6 +226,10 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                     prev_type = "dot";
                     j += 1;
                 }
+                Tok::EqEqual => {
+                    prev_type = "equal_equal";
+                    j += 1;
+                }
                 Tok::Equal => {
                     prev_type = "equal";
                     j += 1;
@@ -345,8 +353,12 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                 }
             }
         }
-        else if prev_type == "equal" {
+        else if prev_type == "equal" || prev_type == "equal_equal" {
             match token {
+                Tok::Float {value: _} => {
+                    prev_type = "float";
+                    j += 1;
+                }
                 Tok::Name {..} => {
                     prev_type = "name";
                     j += 1;
@@ -357,6 +369,21 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                 }
                 Tok::Semi => {
                     return j;
+                }
+                _ => {
+                    return j;
+                }
+            }
+        }
+        else if prev_type == "amp_amp" {
+            match token {
+                Tok::Name {name: _} => {
+                    prev_type = "name";
+                    j += 1;
+                }
+                Tok::Float {value: _} => {
+                    prev_type = "float";
+                    j += 1;
                 }
                 _ => {
                     return j;

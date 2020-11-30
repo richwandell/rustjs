@@ -243,3 +243,23 @@ fn test_number_plus_plus() {
 
     assert!(tokens.eq(&expected));
 }
+
+#[test]
+fn test_and1() {
+
+    let mut lex = Lexer::new();
+    let tokens = lex.lex("x == 5 && x < 10".to_string());
+
+    assert_eq!(tokens.len(), 7);
+    let expected = vec![
+        Tok::Name {name: "x".to_string()},
+        Tok::EqEqual,
+        Tok::Float {value: 5.},
+        Tok::AmpAmp,
+        Tok::Name {name: "x".to_string()},
+        Tok::Less,
+        Tok::Float {value: 10.}
+    ];
+
+    assert!(tokens.eq(&expected));
+}

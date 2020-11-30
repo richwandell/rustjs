@@ -1,10 +1,9 @@
 use std::fs;
-use crate::lexer::lexer::Lexer;
-use crate::lexer::js_token::Tok;
-use crate::parser::parser::Parser;
-use crate::parser::symbols::{JSItem, Statement, AssignOp, Expression, Operator};
+
 use crate::compiler::compiler::Compiler;
-use crate::compiler::op_codes::Op;
+use crate::lexer::lexer::Lexer;
+use crate::parser::parser::Parser;
+use crate::parser::symbols::JSItem;
 use crate::vm::vm::Vm;
 
 #[test]

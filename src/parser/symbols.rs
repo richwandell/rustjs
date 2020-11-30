@@ -72,7 +72,9 @@ pub(crate) enum Operator {
     BitAnd,
     FloorDiv,
     Less, // <
-    Greater // >
+    Greater, // >
+    And,
+    EqEq
 }
 
 #[allow(dead_code)]

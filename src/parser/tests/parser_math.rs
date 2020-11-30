@@ -236,3 +236,29 @@ fn test_identifier_plus_plus() {
     }))
 }
 
+#[test]
+fn test_and1() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("x == 5 && x < 10"));
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+    let expression = js_items.get(0).unwrap();
+
+    assert!(expression.eq(&JSItem::Ex {
+        expression: Box::new(Expression::Binop {
+            a: Box::new(Expression::Binop {
+                a: Box::new(Expression::Identifier {name: "x".to_string()}),
+                op: Operator::EqEq,
+                b: Box::new(Expression::Number {value: 5.})
+            }),
+            op: Operator::And,
+            b: Box::new(Expression::Binop {
+                a: Box::new(Expression::Identifier {name: "x".to_string()}),
+                op: Operator::Less,
+                b: Box::new(Expression::Number {value: 10.})
+            })
+        })
+    }))
+}

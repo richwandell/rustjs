@@ -351,6 +351,9 @@ pub(crate) fn find_token(it: &mut StringIterator) -> Result<Vec<Tok>, LexError> 
                     if word == "null" {
                         return Ok(vec![Tok::Null]);
                     }
+                    if word == "&&" {
+                        return Ok(vec![Tok::AmpAmp]);
+                    }
                     return Ok(vec![Tok::Name { name: word }]);
                 }
 
