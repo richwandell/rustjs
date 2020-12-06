@@ -98,17 +98,12 @@ pub(crate) fn combine_name(last_exp: Expression, name: String) -> Expression {
             }
         }
         Expression::Binop {a, op, b} => {
-            match op {
-                Operator::EqEq | Operator::Add | Operator::Sub | Operator::Mult | Operator::Div | Operator::Less | Operator::Greater | Operator::And => {
-                    let new_a = combine_name(*a, name);
-                    return Expression::Binop {
-                        a: Box::from(new_a),
-                        op,
-                        b,
-                    };
-                }
-                _ => {}
-            }
+            let new_a = combine_name(*a, name);
+            return Expression::Binop {
+                a: Box::from(new_a),
+                op,
+                b,
+            };
         }
         Expression::CallExpression { callee, arguments } => {
             match *callee {
@@ -496,6 +491,13 @@ pub(crate) fn combine_greater(last_exp: Expression) -> Expression {
 
 pub(crate) fn combine_bslash(last_exp: Expression) -> Expression {
     match last_exp {
+        Expression::Identifier { name } => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Div,
+                b: Box::new(Expression::Identifier {name})
+            }
+        }
         Expression::Number { value } => {
             return Expression::Binop {
                 a: Box::new(Expression::None),
@@ -597,6 +599,47 @@ pub(crate) fn combine_eqeq(last_exp: Expression) -> Expression {
             return Expression::Binop {
                 a: Box::new(Expression::None),
                 op: Operator::EqEq,
+                b: Box::new(Expression::SubExpression { expression }),
+            };
+        }
+        _ => {}
+    }
+    return Expression::None;
+}
+
+pub(crate) fn combine_eqeqeq(last_exp: Expression) -> Expression {
+    match last_exp {
+        Expression::Identifier {name} => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::EqEqEq,
+                b: Box::new(Expression::Identifier {name}),
+            };
+        }
+        Expression::Number { value } => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::EqEqEq,
+                b: Box::new(Expression::Number { value }),
+            };
+        }
+        Expression::Binop { a, op, b } => {
+            match op {
+                Operator::Add | Operator::Div | Operator::Less | Operator::And => {
+                    let new_exp = combine_eqeqeq(*a);
+                    return Expression::Binop {
+                        a: Box::from(new_exp),
+                        op,
+                        b,
+                    };
+                }
+                _ => {}
+            }
+        }
+        Expression::SubExpression { expression } => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::EqEqEq,
                 b: Box::new(Expression::SubExpression { expression }),
             };
         }

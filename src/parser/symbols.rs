@@ -73,8 +73,9 @@ pub(crate) enum Operator {
     FloorDiv,
     Less, // <
     Greater, // >
-    And,
-    EqEq
+    And, // &&
+    EqEq, // ==
+    EqEqEq // ===
 }
 
 #[allow(dead_code)]

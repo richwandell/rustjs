@@ -1,7 +1,7 @@
 use crate::lexer::lexer::Lexer;
 use std::fs;
 use crate::parser::parser::Parser;
-use crate::parser::symbols::{Expression, Operator};
+use crate::parser::symbols::{Expression, Operator, Statement, AssignOp};
 use crate::parser::symbols::JSItem;
 
 #[test]
@@ -261,4 +261,57 @@ fn test_and1() {
             })
         })
     }))
+}
+
+#[test]
+fn test_triple_equal() {
+
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("x === 5"));
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+    let expression = js_items.get(0).unwrap();
+
+    assert!(expression.eq(&JSItem::Ex {
+        expression: Box::new(Expression::Binop {
+            a: Box::new(Expression::Identifier {name: "x".to_string()}),
+            op: Operator::EqEqEq,
+            b: Box::new(Expression::Number {value: 5.})
+        })
+    }))
+}
+
+#[test]
+fn test_div_log() {
+    let file = fs::read_to_string("js/math/div/div_log.js");
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(file.unwrap());
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 2);
+
+    assert!(js_items.eq(&vec![JSItem::St {
+        statement: Box::new(Statement::AssignmentExpression {
+            operator: AssignOp::Let,
+            left: JSItem::Ex { expression: Box::new(Expression::Literal { value: "b".to_string() }) },
+            right: JSItem::Ex {expression: Box::new(Expression::Number {value: 5.})}
+        })
+    }, JSItem::Ex {
+        expression: Box::new(Expression::CallExpression {
+            callee: Box::new(Expression::MemberExpression {
+                object: Box::new(Expression::Identifier { name: "console".to_string() }),
+                property: Box::new(Expression::Identifier {name: "log".to_string()})
+            }),
+            arguments: vec![JSItem::Ex {
+                expression: Box::new(Expression::Binop {
+                    a: Box::new(Expression::Identifier {name: "b".to_string()}),
+                    op: Operator::Div,
+                    b: Box::new(Expression::Number {value: 2.})
+                })
+            }]
+        })
+    }]));
 }

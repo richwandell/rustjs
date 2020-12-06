@@ -60,7 +60,8 @@ impl Vm {
                 Op::StoreProp { name } => self.store_prop(name.clone()),
                 Op::Greater => self.greater(),
                 Op::And => self.and(),
-                Op::EqEq => self.eqeq()
+                Op::EqEq => self.eqeq(),
+                Op::EqEqEq => self.eqeqeq()
             }
         }
         return self.stack.pop().unwrap_or(JSItem::Undefined);
@@ -499,6 +500,13 @@ impl Vm {
         self.ip += 1;
     }
 
+    fn eqeqeq(&mut self) {
+        let v2 = self.get();
+        let v1 = self.get();
+        self.stack.push(JSItem::Bool {value: v2.eq(&v1)});
+        self.ip += 1;
+    }
+
     fn greater(&mut self) {
         let v2 = match self.get() {
             JSItem::Number {value} => value,
@@ -565,7 +573,7 @@ impl Vm {
             JSItem::Number {value} => value,
             _ => 0.
         };
-        self.stack.push(JSItem::Number {value: v1 / v2});
+        self.stack.push(JSItem::Number { value: v1 / v2 });
         self.ip += 1;
     }
 

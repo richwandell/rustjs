@@ -50,5 +50,6 @@ pub(crate) enum Op {
     Greater, // 0x17,
     And, // 0x18
     EqEq, // 0x19
+    EqEqEq, // 0x1a
 }
 

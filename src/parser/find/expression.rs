@@ -214,6 +214,10 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
         }
         else if prev_type == "name" {
             match token {
+                Tok::Bslash => {
+                    prev_type = "bslash";
+                    j += 1;
+                }
                 Tok::Star => {
                     prev_type = "star";
                     j += 1;
@@ -224,6 +228,10 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                 }
                 Tok::Dot => {
                     prev_type = "dot";
+                    j += 1;
+                }
+                Tok::EqEqEual => {
+                    prev_type = "equal_equal_equal";
                     j += 1;
                 }
                 Tok::EqEqual => {
@@ -357,7 +365,7 @@ pub(crate) fn find_end_of_expression(start: usize, tokens: &Vec<Tok>, start_type
                 }
             }
         }
-        else if prev_type == "equal" || prev_type == "equal_equal" {
+        else if prev_type == "equal" || prev_type == "equal_equal" || prev_type == "equal_equal_equal"{
             match token {
                 Tok::Float {value: _} => {
                     prev_type = "float";

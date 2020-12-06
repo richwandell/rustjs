@@ -263,3 +263,19 @@ fn test_and1() {
 
     assert!(tokens.eq(&expected));
 }
+
+#[test]
+fn test_triple_equal() {
+
+    let mut lex = Lexer::new();
+    let tokens = lex.lex("x === 5".to_string());
+
+    assert_eq!(tokens.len(), 3);
+    let expected = vec![
+        Tok::Name {name: "x".to_string()},
+        Tok::EqEqEual,
+        Tok::Float {value: 5.}
+    ];
+
+    assert!(tokens.eq(&expected));
+}

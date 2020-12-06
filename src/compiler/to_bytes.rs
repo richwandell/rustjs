@@ -93,6 +93,9 @@ pub(crate) fn to_bytes(ops: Vec<Op>) -> Vec<u8> {
             Op::EqEq => {
                 buffer.write_u8(0x19)
             }
+            Op::EqEqEq => {
+                buffer.write_u8(0x1a)
+            }
         }
     }
     return buffer.to_bytes();
