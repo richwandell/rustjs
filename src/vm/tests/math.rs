@@ -3,6 +3,7 @@ use crate::parser::parser::Parser;
 use crate::parser::symbols::JSItem;
 use crate::vm::vm::Vm;
 use crate::compiler::compiler::Compiler;
+use std::fs;
 
 #[test]
 fn test_simple_add() {
@@ -168,3 +169,50 @@ fn test_mul_expression_add() {
     let out = vm.run(compiler.bc_ins);
     assert_eq!(out, JSItem::Number {value: 9.});
 }
+
+#[test]
+fn test_and1() {
+    let file = fs::read_to_string("js/math/and1.js");
+
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(file.unwrap());
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 2);
+
+    let mut compiler = Compiler::new();
+    for item in js_items {
+        compiler.compile(item);
+    }
+
+
+    let mut vm = Vm::new();
+    let out = vm.run(compiler.bc_ins);
+    assert_eq!(out, JSItem::Bool {value: true});
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

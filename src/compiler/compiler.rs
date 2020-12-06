@@ -25,6 +25,8 @@ impl Compiler {
             Operator::Div => Op::Div,
             Operator::Less => Op::Less,
             Operator::Greater => Op::Greater,
+            Operator::And => Op::And,
+            Operator::EqEq => Op::EqEq,
             _ => Op::Add
         };
         self.visit_ex(a);

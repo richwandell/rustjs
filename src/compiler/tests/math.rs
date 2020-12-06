@@ -276,3 +276,50 @@ fn test_mul_expression_add() {
         Op::Add
     ]);
 }
+
+#[test]
+fn test_and1() {
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(String::from("x == 5 && x < 10"));
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+
+    let mut com = Compiler::new();
+    let item = js_items.pop().unwrap();
+    com.compile(item);
+
+
+    assert_eq!(com.bc_ins, vec![
+        Op::Load { name: "x".to_string()},
+        Op::LoadNumConst { value: 5. },
+        Op::EqEq,
+        Op::Load { name:  "x".to_string()},
+        Op::LoadNumConst { value: 10. },
+        Op::Less,
+        Op::And
+    ]);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

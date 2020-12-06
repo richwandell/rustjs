@@ -397,7 +397,7 @@ pub(crate) fn combine_less(last_exp: Expression) -> Expression {
                         })
                     }
                 }
-                Operator::Less => {
+                Operator::Less | Operator::And => {
                     let new_exp = combine_less(*a);
                     return Expression::Binop {
                         a: Box::from(new_exp),
@@ -460,7 +460,7 @@ pub(crate) fn combine_greater(last_exp: Expression) -> Expression {
                         })
                     }
                 }
-                Operator::Less => {
+                Operator::Less | Operator::And => {
                     let new_exp = combine_greater(*a);
                     return Expression::Binop {
                         a: Box::from(new_exp),

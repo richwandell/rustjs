@@ -58,7 +58,9 @@ impl Vm {
                 Op::LoadProp { name } => self.load_prop(name.clone()),
                 Op::CreateObj => self.create_obj(),
                 Op::StoreProp { name } => self.store_prop(name.clone()),
-                Op::Greater => self.greater()
+                Op::Greater => self.greater(),
+                Op::And => self.and(),
+                Op::EqEq => self.eqeq()
             }
         }
         return self.stack.pop().unwrap_or(JSItem::Undefined);
@@ -385,6 +387,115 @@ impl Vm {
             _ => 0.
         };
         self.stack.push(JSItem::Bool {value: v1 < v2});
+        self.ip += 1;
+    }
+
+    fn and(&mut self) {
+        let v2 = match self.get() {
+            JSItem::Bool {value} => value,
+            _ => false
+        };
+        let v1 = match self.get() {
+            JSItem::Bool {value} => value,
+            _ => false
+        };
+        self.stack.push(JSItem::Bool {value: v1 && v2});
+        self.ip += 1;
+    }
+
+    fn eqeq(&mut self){
+        let v2 = self.get();
+        let v1 = self.get();
+        let eq = match v1 {
+            JSItem::String {value: value_1} => {
+                match v2 {
+                    JSItem::String {value: value_2} => {
+                        value_1 == value_2
+                    }
+                    JSItem::Bool {value: value_2} => {
+                        if value_2 {
+                            value_1 == "1".to_string()
+                        } else {
+                            if value_1.trim() == "" || value_1.trim() == "0"{
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                    }
+                    JSItem::Number {value: value_2} => {
+                        if let Ok(value_1_parsed) = value_1.parse::<f64>() {
+                            value_1_parsed == value_2
+                        } else if let Ok(value_1_parsed) = value_1.parse::<i64>() {
+                            value_1_parsed as f64 == value_2
+                        } else {
+                            false
+                        }
+                    }
+                    _ => {
+                        panic!("Runtime Error")
+                    }
+                }
+            }
+            JSItem::Number {value: value_1} => {
+                match v2 {
+                    JSItem::String {value: value_2} => {
+                        if let Ok(value_2_parsed) = value_2.parse::<f64>() {
+                            value_2_parsed == value_1
+                        } else if let Ok(value_2_parsed) = value_2.parse::<i64>() {
+                            value_2_parsed as f64 == value_1
+                        } else {
+                            false
+                        }
+                    }
+                    JSItem::Bool {value: value_2} => {
+                        if value_2 {
+                            value_1 == 1.
+                        } else {
+                            value_1 == 0.
+                        }
+                    }
+                    JSItem::Number {value: value_2} => {
+                        value_1 == value_2
+                    }
+                    _ => {
+                        panic!("Runtime Error")
+                    }
+                }
+            }
+            JSItem::Bool {value: value_1} => {
+                match v2 {
+                    JSItem::String {value: value_2} => {
+                        if value_1{
+                            value_2 == "1".to_string()
+                        } else {
+                            if value_2.trim() == "" || value_2.trim() == "0"{
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                    }
+                    JSItem::Bool {value: value_2} => {
+                        value_1 == value_2
+                    }
+                    JSItem::Number {value: value_2} => {
+                        if value_1 {
+                            value_2 == 1.
+                        } else {
+                            value_2 == 0.
+                        }
+                    }
+                    _ => {
+                        panic!("Runtime Error")
+                    }
+                }
+            }
+            _ => {
+                panic!("Runtime Error")
+            }
+        };
+        self.stack.push(JSItem::Bool {value: eq});
         self.ip += 1;
     }
 

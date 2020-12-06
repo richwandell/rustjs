@@ -47,6 +47,8 @@ pub(crate) enum Op {
     StoreProp { // 0x16
         name: String
     },
-    Greater // 0x17
+    Greater, // 0x17,
+    And, // 0x18
+    EqEq, // 0x19
 }
 
