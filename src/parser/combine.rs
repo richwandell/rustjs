@@ -520,6 +520,13 @@ pub(crate) fn combine_bslash(last_exp: Expression) -> Expression {
 
 pub(crate) fn combine_star(last_exp: Expression) -> Expression {
     match last_exp {
+        Expression::Identifier { name } => {
+            return Expression::Binop {
+                a: Box::new(Expression::None),
+                op: Operator::Mult,
+                b: Box::new(Expression::Identifier {name})
+            }
+        }
         Expression::Number { value } => {
             return Expression::Binop {
                 a: Box::new(Expression::None),

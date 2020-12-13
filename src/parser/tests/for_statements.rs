@@ -436,6 +436,81 @@ fn test_for_div_nan1() {
     }))
 }
 
+#[test]
+fn test_nested_for_mul() {
+    let file = fs::read_to_string("js/if_while_for/nested_for_mul.js");
+
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(file.unwrap());
+    let mut js_items = parser.parse(tokens);
+
+    assert_eq!(js_items.len(), 1);
+
+    let for_loop = js_items.get(0).unwrap();
+    assert!(for_loop.eq(&JSItem::St {
+        statement: Box::new(Statement::ForStatement {
+            init: JSItem::St {
+                statement: Box::new(Statement::AssignmentExpression {
+                    operator: AssignOp::Let,
+                    left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "a".to_string()})},
+                    right: JSItem::Ex {expression: Box::from(Expression::Number {value: 0.})}
+                })
+            },
+            test: JSItem::Ex {
+                expression: Box::new(Expression::Binop {
+                    a: Box::new(Expression::Identifier {name: "a".to_string()}),
+                    op: Operator::Less,
+                    b: Box::new(Expression::Number {value: 3.})
+                })
+            },
+            update: JSItem::Ex {
+                expression: Box::new(Expression::UpdateExpression {
+                    expression: Box::new(Expression::Identifier {name: "a".to_string()})
+                })
+            },
+            body: vec![JSItem::St {
+                statement: Box::new(Statement::ForStatement {
+                    init: JSItem::St {
+                        statement: Box::new(Statement::AssignmentExpression {
+                            operator: AssignOp::Let,
+                            left: JSItem::Ex {expression: Box::from(Expression::Literal {value: "b".to_string()})},
+                            right: JSItem::Ex {expression: Box::from(Expression::Number {value: 0.})}
+                        })
+                    },
+                    test: JSItem::Ex {
+                        expression: Box::new(Expression::Binop {
+                            a: Box::new(Expression::Identifier {name: "b".to_string()}),
+                            op: Operator::Less,
+                            b: Box::new(Expression::Number {value: 3.})
+                        })
+                    },
+                    update: JSItem::Ex {
+                        expression: Box::new(Expression::UpdateExpression {
+                            expression: Box::new(Expression::Identifier {name: "b".to_string()})
+                        })
+                    },
+                    body: vec![JSItem::Ex {
+                        expression: Box::new(Expression::CallExpression {
+                            callee: Box::new(Expression::MemberExpression {
+                                object: Box::new(Expression::Identifier {name: "console".to_string()}),
+                                property: Box::new(Expression::Identifier {name: "log".to_string()})
+                            }),
+                            arguments: vec![JSItem::Ex {
+                                expression: Box::new(Expression::Binop {
+                                    a: Box::new(Expression::Identifier {name: "a".to_string()}),
+                                    op: Operator::Mult,
+                                    b: Box::new(Expression::Identifier {name: "b".to_string()})
+                                })
+                            }]
+                        })
+                    }]
+                })
+            }]
+        })
+    }))
+}
+
 
 
 

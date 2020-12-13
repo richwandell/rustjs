@@ -227,6 +227,39 @@ fn test_for_if() {
     ]))
 }
 
+#[test]
+fn test_nested_for_mul() {
+    let file = fs::read_to_string("js/if_while_for/nested_for_mul.js");
+
+    let mut lex = Lexer::new();
+    let mut parser = Parser::new();
+    let tokens = lex.lex(file.unwrap());
+    let mut js_items = parser.parse(tokens);
+
+    let mut compiler = Compiler::new();
+    for item in js_items {
+        compiler.compile(item);
+    }
+
+    let mut vm = Vm::new();
+    let out = vm.run(compiler.bc_ins);
+
+    assert_eq!(out, JSItem::Undefined);
+    let captured = vm.captured_output;
+    assert_eq!(captured.len(), 9);
+    assert!(captured.eq(&vec![
+        vec![JSItem::Number {value: 0.}],
+        vec![JSItem::Number {value: 0.}],
+        vec![JSItem::Number {value: 0.}],
+        vec![JSItem::Number {value: 0.}],
+        vec![JSItem::Number {value: 1.}],
+        vec![JSItem::Number {value: 2.}],
+        vec![JSItem::Number {value: 0.}],
+        vec![JSItem::Number {value: 2.}],
+        vec![JSItem::Number {value: 4.}],
+    ]))
+}
+
 
 
 
