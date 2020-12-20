@@ -11,13 +11,33 @@ pub(crate) fn find_end_of_if(start: usize, tokens: &Vec<Tok>) -> Result<usize, S
         j = k;
 
         loop {
+
             let k = find_end_of_line_or_lbrace(j, tokens);
             j = k;
 
+            if j == tokens.len() {
+                j = tokens.len() - 1;
+                break;
+            }
+
+            if j == tokens.len() - 1 {
+                break;
+            }
+
+
             match tokens.get(k).unwrap() {
                 Tok::EndOfLine => {
-                    let k = find_end_of_line_or_lbrace(j + 1, tokens);
-                    j = k;
+                    match tokens.get(k + 1).unwrap() {
+                        Tok::Else => {
+
+                        }
+                        _ => {
+                            j = k;
+                            let k = find_end_of_line_or_lbrace(j + 1, tokens);
+                            j = k;
+                            continue;
+                        }
+                    }
                 }
                 Tok::Lbrace => {
                     let k = find_matching_brace(j, tokens);
@@ -28,13 +48,19 @@ pub(crate) fn find_end_of_if(start: usize, tokens: &Vec<Tok>) -> Result<usize, S
                 }
             }
 
+
+            if j == tokens.len() {
+                j = tokens.len() - 1;
+                break;
+            }
+
             if j == tokens.len() - 1 {
                 break;
             }
 
             match tokens.get(j + 1).unwrap() {
                 Tok::Else => {
-                    j += 1;
+                    j = j + 1;
                     continue;
                 }
                 _ => {

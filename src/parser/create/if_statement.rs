@@ -59,7 +59,9 @@ pub(crate) fn create_if_statement(mut tokens: Vec<Tok>) -> JSItem {
             }
         }
     } else {
-        tokens.pop();
+        if tokens.get(tokens.len() - 1).unwrap().eq(&Tok::EndOfLine) {
+            tokens.pop();
+        }
         while !tokens.is_empty() {
             let tok = tokens.pop().unwrap();
             match tok {
