@@ -5,6 +5,7 @@ mod parser;
 mod compiler;
 mod ast_interpreter;
 mod vm;
+mod wasm;
 
 use std::{fs};
 use crate::lexer::lexer::Lexer;
