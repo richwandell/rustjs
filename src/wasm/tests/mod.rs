@@ -1,23 +1,24 @@
 use std::fs::File;
 use std::io::Write;
+use crate::wasm::compiler::WasmCompiler;
 
 mod read_bytes;
 
 #[test]
 fn write_wasm() {
-    let mut bytes = vec![];
+    let mut comp = WasmCompiler::new();
 
-    let len_sig: i16 = 40;
+    comp.add_func(
+        vec![0x7f, 0x7f],
+        vec![0x7f],
+        vec![0x20, 0x00, 0x20, 0x01, 0x6a],
+        true,
+        "add"
+    );
 
+    let output = comp.get_bytes();
 
-    if len_sig < 256 {
-        bytes.push(0x01);
-        bytes.push(len_sig as i8);
-    } else if len_sig < 65536 {
-        bytes.push(0x02);
-        bytes.push(len_sig as i8);
-        bytes.push((len_sig >> 8) as i8);
-    }
-
+    let mut file = File::create("out.wasm").unwrap();
+    file.write_all(&comp.output);
     println!("{}", "hi");
 }
