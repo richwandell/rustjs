@@ -2,7 +2,7 @@ use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
 use crate::parser::symbols::JSItem;
 use crate::vm::vm::Vm;
-use crate::compiler::compiler::Compiler;
+use crate::compiler_bytecode::compiler::Compiler;
 use std::fs;
 use std::f64::{INFINITY};
 

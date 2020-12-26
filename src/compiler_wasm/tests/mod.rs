@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::Write;
-use crate::wasm::compiler::WasmCompiler;
+use crate::compiler_wasm::compiler::WasmCompiler;
 
 mod read_bytes;
 

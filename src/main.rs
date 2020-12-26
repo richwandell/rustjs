@@ -1,25 +1,27 @@
 #![allow(unused_mut)]
 
-mod lexer;
-mod parser;
-mod compiler;
-mod ast_interpreter;
-mod vm;
-mod wasm;
-
-use std::{fs};
-use crate::lexer::lexer::Lexer;
-use clap::{App, Arg};
-use crate::parser::parser::Parser;
-use crate::parser::symbols::JSItem;
-use crate::compiler::compiler::Compiler;
-use crate::compiler::to_bytes::to_bytes;
-use std::fs::File;
-use std::io::{Write, Read};
-use crate::vm::vm::Vm;
-
 extern crate clap;
 #[macro_use] extern crate maplit;
+
+use std::fs;
+use std::fs::File;
+use std::io::{Read, Write};
+
+use clap::{App, Arg};
+
+use crate::lexer::lexer::Lexer;
+use crate::parser::parser::Parser;
+use crate::parser::symbols::JSItem;
+use crate::vm::vm::Vm;
+use crate::compiler_bytecode::compiler::Compiler;
+use crate::compiler_bytecode::to_bytes::to_bytes;
+
+mod lexer;
+mod parser;
+mod compiler_bytecode;
+mod compiler_wasm;
+mod ast_interpreter;
+mod vm;
 
 fn get_js_items(file_name: &str) -> Vec<JSItem> {
     match  fs::read_to_string(file_name) {

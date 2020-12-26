@@ -1,5 +1,5 @@
-use crate::compiler::to_bytes::from_bytes;
-use crate::compiler::op_codes::Op;
+use crate::compiler_bytecode::to_bytes::from_bytes;
+use crate::compiler_bytecode::op_codes::Op;
 
 #[test]
 fn test_from_bytes_math_1() {

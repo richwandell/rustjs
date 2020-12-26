@@ -1,7 +1,7 @@
 use std::fs;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
-use crate::compiler::compiler::Compiler;
+use crate::compiler_bytecode::compiler::Compiler;
 use crate::vm::vm::Vm;
 use crate::parser::symbols::JSItem;
 

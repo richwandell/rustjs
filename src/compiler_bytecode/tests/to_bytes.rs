@@ -1,7 +1,7 @@
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
-use crate::compiler::compiler::{Compiler};
-use crate::compiler::to_bytes::{to_bytes};
+use crate::compiler_bytecode::compiler::{Compiler};
+use crate::compiler_bytecode::to_bytes::{to_bytes};
 
 #[test]
 fn test_math_1() {

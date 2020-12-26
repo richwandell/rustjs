@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::parser::symbols::{JSItem, StdFun};
-use crate::compiler::op_codes::Op;
+use crate::compiler_bytecode::op_codes::Op;
 use crate::vm::std::create_std_objects;
 use crate::vm::scope::insert::{set_object, load_object, load_prop, locate_obj_props, add_to_located_obj};
 use crate::lexer::js_token::Tok;

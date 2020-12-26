@@ -13,6 +13,7 @@ pub(crate) struct WasmCompiler {
     data_sec: Vec<Vec<u8>>
 }
 
+
 impl WasmCompiler {
 
     pub(crate) fn new() -> WasmCompiler {
@@ -59,7 +60,7 @@ impl WasmCompiler {
         for ft in &self.func_type_sec {
             func_type_len += ft.len();
         }
-        self.output.push(0x01);
+        self.output.push(self.func_type_sec.len() as u8);
         self.output.push(func_type_len as u8);
         self.output.push(self.func_type_sec.len() as u8);
 
@@ -91,19 +92,39 @@ impl WasmCompiler {
      the 00 directly after the name marks it as a function export, the 00 after that is the index of the exported function
     */
     fn write_export_sec(&mut self) {
+        // start of export section
+        self.output.push(0x07);
+        let mut num_export_bytes = 0;
+        let num_exports = self.export_sec.len();
 
+        for ex in &self.export_sec {
+            num_export_bytes += ex.len();
+        }
+
+        self.output.push((num_export_bytes + 1) as u8);
+        self.output.push(num_exports as u8);
+
+        for ex in self.export_sec.iter_mut() {
+            self.output.append(ex);
+        }
     }
 
     fn write_code_sec(&mut self) {
-        let mut num_total_bytes = 0;
+        self.output.push(0x0a);
+        let mut num_total_bytes = 1;
         for cs in &self.code_sec {
-            num_total_bytes += cs.len();
+            num_total_bytes += cs.len() + 3;
         }
         let num_code_secs = self.code_sec.len() as u8;
         self.output.push(num_total_bytes as u8);
         self.output.push(num_code_secs as u8);
+        let mut i = 0;
         for cs in self.code_sec.iter_mut() {
+            self.output.push((cs.len() + 2) as u8);
+            self.output.push(i as u8);
             self.output.append(cs);
+            self.output.push(0x0b);
+            i += 1;
         }
     }
 
@@ -131,11 +152,12 @@ impl WasmCompiler {
         } else {
             func.push(0);
         }
+
         self.func_type_sec.push(func);
         self.code_sec.push(code);
 
         if export {
-            let func_id = self.func_type_sec.len() as u8;
+            let func_id = (self.func_type_sec.len() - 1) as u8;
             let mut name_bytes = String::from(name).into_bytes();
             let mut ex = vec![name_bytes.len() as u8];
             ex.append(&mut name_bytes);

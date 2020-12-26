@@ -1,4 +1,4 @@
-use crate::compiler::op_codes::Op;
+use crate::compiler_bytecode::op_codes::Op;
 use bytebuffer::ByteBuffer;
 
 pub(crate) fn to_bytes(ops: Vec<Op>) -> Vec<u8> {

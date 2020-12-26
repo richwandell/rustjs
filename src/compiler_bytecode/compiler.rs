@@ -1,5 +1,5 @@
 use crate::parser::symbols::{JSItem, Expression, Operator, Statement};
-use crate::compiler::op_codes::Op;
+use crate::compiler_bytecode::op_codes::Op;
 use crate::lexer::js_token::Tok;
 use std::collections::HashMap;
 

@@ -1,9 +1,9 @@
 use std::fs;
 
-use crate::compiler::compiler::Compiler;
+use crate::compiler_bytecode::compiler::Compiler;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
-use crate::compiler::op_codes::Op;
+use crate::compiler_bytecode::op_codes::Op;
 
 #[test]
 fn test_for() {
